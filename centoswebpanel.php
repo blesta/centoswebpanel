@@ -1215,7 +1215,7 @@ class Centoswebpanel extends Module
     public function validateHostName($host_name)
     {
         $validator = new Server();
-        return $validator->isDomain($host_name);
+        return $validator->isDomain($host_name) || $validator->isIp($host_name);
     }
 
     /**
