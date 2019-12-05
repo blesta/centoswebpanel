@@ -7,8 +7,6 @@ $lang['Centoswebpanel.name'] = 'CentOS WebPanel';
 $lang['Centoswebpanel.module_row'] = 'Server';
 $lang['Centoswebpanel.module_row_plural'] = 'Servers';
 $lang['Centoswebpanel.module_group'] = 'Server Group';
-$lang['Centoswebpanel.tab_firewall'] = 'Firewall';
-$lang['Centoswebpanel.tab_client_firewall'] = 'Firewall';
 
 // Module management
 $lang['Centoswebpanel.add_module_row'] = 'Add Server';
@@ -60,6 +58,8 @@ $lang['Centoswebpanel.edit_row.add_btn'] = 'Edit Server';
 
 $lang['Centoswebpanel.row_meta.server_name'] = 'Server Label';
 $lang['Centoswebpanel.row_meta.host_name'] = 'Hostname';
+$lang['Centoswebpanel.row_meta.port'] = 'Port';
+$lang['Centoswebpanel.row_meta.default_port'] = '2304';
 $lang['Centoswebpanel.row_meta.api_key'] = 'API Key';
 $lang['Centoswebpanel.row_meta.use_ssl'] = 'Use SSL when connecting to the API (recommended)';
 $lang['Centoswebpanel.row_meta.account_limit'] = 'Account Limit';
@@ -74,16 +74,6 @@ $lang['Centoswebpanel.package_fields.nproc'] = 'Maximum Process';
 $lang['Centoswebpanel.service_field.domain'] = 'Domain';
 $lang['Centoswebpanel.service_field.username'] = 'Username';
 $lang['Centoswebpanel.service_field.password'] = 'Password';
-
-// Service management
-$lang['Centoswebpanel.tab_firewall.unblock_ip_title'] = 'Unblock IP';
-$lang['Centoswebpanel.tab_firewall.field_ip_address'] = 'IP Address';
-$lang['Centoswebpanel.tab_firewall.button_unblock'] = 'Unblock';
-
-// Client actions
-$lang['Centoswebpanel.tab_client_firewall.unblock_ip_title'] = 'Unblock IP';
-$lang['Centoswebpanel.tab_client_firewall.field_ip_address'] = 'IP Address';
-$lang['Centoswebpanel.tab_client_firewall.button_unblock'] = 'Unblock';
 
 // Service info
 $lang['Centoswebpanel.service_info.username'] = 'Username';

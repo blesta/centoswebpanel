@@ -17,6 +17,11 @@ class CentoswebpanelApi
     private $hostname;
 
     /**
+     * @var int The port on which to connect to the API
+     */
+    private $port;
+
+    /**
      * @var string The CentOS WebPanel api key
      */
     private $key;
@@ -30,12 +35,14 @@ class CentoswebpanelApi
      * Initializes the class.
      *
      * @param mixed $hostname The CentOS WebPanel hostname or IP Address
+     * @param int $port The port on which to connect to the API
      * @param mixed $key The api key
      * @param mixed $use_ssl True to connect to the api using SSL
      */
-    public function __construct($hostname, $key, $use_ssl = false)
+    public function __construct($hostname, $port, $key, $use_ssl = false)
     {
         $this->hostname = $hostname;
+        $this->port = $port;
         $this->key = $key;
         $this->use_ssl = $use_ssl;
     }
@@ -46,14 +53,13 @@ class CentoswebpanelApi
      * @param string $function Specifies the api function to invoke
      * @param array $params The parameters to include in the api
      * @param string $method Http request method (GET, DELETE, POST)
-     * @return array An array containing the api response
+     * @return CentoswebpanelResponse An object containing the api response
      */
     private function apiRequest($function, array $params = [], $method = 'POST')
     {
         // Set api url
         $protocol = ($this->use_ssl ? 'https' : 'http');
-        $port = ($this->use_ssl ? '2304' : '2304');
-        $url = $protocol . '://' . $this->hostname . ':' . $port . '/v1/' . $function;
+        $url = $protocol . '://' . $this->hostname . ':' . $this->port . '/v1/' . $function;
         $ch = curl_init();
 
         // Set the API access key
@@ -117,7 +123,7 @@ class CentoswebpanelApi
      *  - limit_nproc: The maximum number of process that can run simultaneously, don’t use 0 as it will
      *     not allow any processes
      *  - server_ips: Ip server
-     * @return array An array containing the request response
+     * @return CentoswebpanelResponse An object containing the request response
      */
     public function createAccount(array $params)
     {
@@ -126,11 +132,32 @@ class CentoswebpanelApi
     }
 
     /**
+     * Updates an account in the server.
+     *
+     * @param array $params An array contaning the following arguments:
+     *  - user: Username to create
+     *  - email: Email Address of the account owner
+     *  - package: Create account with package
+     *  - inode: The account inodes limit, 0 for unlimited
+     *  - limit_nofile: The maximum number of files that can host the account
+     *  - limit_nproc: The maximum number of process that can run simultaneously, don’t use 0 as it will
+     *     not allow any processes
+     *  - server_ips: Ip server
+     * @return CentoswebpanelResponse An object containing the request response
+     */
+    public function updateAccount(array $params)
+    {
+        // TODO This doesn't actually seem to work.  Figure out why and fix it
+        $params['action'] = 'udp';
+        return $this->apiRequest('account', $params);
+    }
+
+    /**
      * Removes an existing account from the server.
      *
      * @param string $username Specifies the username of the account
      * @param string $email Specifies the email address of the account owner
-     * @return array An array containing the request response
+     * @return CentoswebpanelResponse An object containing the request response
      */
     public function removeAccount($username, $email)
     {
@@ -146,7 +173,7 @@ class CentoswebpanelApi
      * Suspend an existing account from the server.
      *
      * @param string $username Specifies the username of the account
-     * @return array An array containing the request response
+     * @return CentoswebpanelResponse An object containing the request response
      */
     public function suspendAccount($username)
     {
@@ -161,7 +188,7 @@ class CentoswebpanelApi
      * Unsuspends an existing account from the server.
      *
      * @param string $username Specifies the username of the account
-     * @return array An array containing the request response
+     * @return CentoswebpanelResponse An object containing the request response
      */
     public function unsuspendAccount($username)
     {
@@ -173,14 +200,13 @@ class CentoswebpanelApi
     }
 
     /**
-     * Unblock IP address in CSF firewall.
+     * Gets a list
      *
-     * @param string $ip_address The IP address to unblock
-     * @return array An array containing the request response
+     * @return type
      */
-    public function unblockIp($ip_address)
+    public function getPackages()
     {
-        return $this->apiRequest('unblock_ip', ['user_ip' => $ip_address]);
+        return $this->apiRequest('packages', ['action' => 'list']);
     }
 
     /**
