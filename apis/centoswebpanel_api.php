@@ -1,4 +1,5 @@
 <?php
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'centoswebpanel_response.php';
 /**
  * CentOS WebPanel API.
  *
@@ -44,96 +45,101 @@ class CentoswebpanelApi
      *
      * @param string $function Specifies the api function to invoke
      * @param array $params The parameters to include in the api
+     * @param string $method Http request method (GET, DELETE, POST)
      * @return array An array containing the api response
      */
-    public function apiRequest($function, array $params = [])
+    private function apiRequest($function, array $params = [], $method = 'POST')
     {
         // Set api url
         $protocol = ($this->use_ssl ? 'https' : 'http');
-        $port = ($this->use_ssl ? '2031' : '2030');
+        $port = ($this->use_ssl ? '2304' : '2304');
+        $url = $protocol . '://' . $this->hostname . ':' . $port . '/v1/' . $function;
+        $ch = curl_init();
 
-        $url = $protocol . '://'
-            . $this->hostname . ':' . $port
-            . '/api/?key=' . $this->key
-            . '&api=' . $function
-            . '&' . http_build_query($params);
+        // Set the API access key
+        $params['key'] = $this->key;
+
+        // Set the request method and parameters
+        switch (strtoupper($method)) {
+            case 'GET':
+            case 'DELETE':
+                $url .= empty($params) ? '' : '?' . http_build_query($params);
+                break;
+            case 'POST':
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+                curl_setopt($ch, CURLOPT_POST, 1);
+            default:
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
+                break;
+        }
 
         // Send request
-        $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
         curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        $data = $this->parseResponse(curl_exec($ch));
+
+        $result = curl_exec($ch);
+        if (curl_errno($ch)) {
+            $error = [
+                'errors' => [
+                    (object)['detail' => 'An internal error occurred, or the server did not respond to the request.']
+                ],
+                'status' => 500
+            ];
+
+            return new CentoswebpanelResponse(['content' => json_encode($error), 'headers' => []]);
+        }
+        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         curl_close($ch);
 
-        return $data;
-    }
-
-    /**
-     * Parse the returned response.
-     *
-     * @param string $response The api response
-     * @return array An array with the parsed response
-     */
-    private function parseResponse($response)
-    {
-        // Unfortunately the CentOS WebPanel API does not return parseable data
-        // such as JSON or XML, it only returns a human-readable text.
-        // Using the returned text we will try to build a parseable response.
-        $possible_results = [
-            'OK',
-            'IP removed from all block lists',
-            'Account Removal Script Completed!'
-        ];
-
-        $response = trim($response);
-        $success = false;
-
-        foreach ($possible_results as $result) {
-            if (strpos($response, $result) !== false) {
-                $success = true;
-            }
-        }
-
-        return [
-            'success' => $success,
-            'message' => !empty($response) ? $response : 'A connection to the server could not be established.',
-            'code' => ($success ? '200' : '500')
-        ];
+        // Return request response
+        return new CentoswebpanelResponse(
+            ['content' => substr($result, $header_size), 'headers' => explode("\n", substr($result, 0, $header_size))]
+        );
     }
 
     /**
      * Creates a new account in the server.
      *
      * @param array $params An array contaning the following arguments:
-     *  - domain: The account domain name
-     *  - username: The account username
-     *  - password: The account password
-     *  - package: The package ID to assign to the account
-     *  - email: The client email address
-     *  - inode: The account inodes limit
-     *  - nofile: The maximum number of files that can host the account
-     *  - nproc: The maximum number of process that can run simultaneously
+     *  - domain: Main domain associated with the account
+     *  - user: Username to create
+     *  - pass: Password for the account
+     *  - email: Email Address of the account owner
+     *  - package: Create account with package
+     *  - inode: The account inodes limit, 0 for unlimited
+     *  - limit_nofile: The maximum number of files that can host the account
+     *  - limit_nproc: The maximum number of process that can run simultaneously, don’t use 0 as it will
+     *     not allow any processes
+     *  - server_ips: Ip server
      * @return array An array containing the request response
      */
-    public function createAccount($params)
+    public function createAccount(array $params)
     {
-        return $this->apiRequest('account_new', $params);
+        $params['action'] = 'add';
+        return $this->apiRequest('account', $params);
     }
 
     /**
      * Removes an existing account from the server.
      *
      * @param string $username Specifies the username of the account
+     * @param string $email Specifies the email address of the account owner
      * @return array An array containing the request response
      */
-    public function removeAccount($username)
+    public function removeAccount($username, $email)
     {
-        return $this->apiRequest('account_remove', ['username' => $username]);
+        $params = [
+            'user' => $username,
+            'email' => $email,
+            'action' => 'del'
+        ];
+        return $this->apiRequest('account', $params);
     }
 
     /**
@@ -144,7 +150,11 @@ class CentoswebpanelApi
      */
     public function suspendAccount($username)
     {
-        return $this->apiRequest('account_suspend', ['username' => $username]);
+        $params = [
+            'user' => $username,
+            'action' => 'susp'
+        ];
+        return $this->apiRequest('account', $params);
     }
 
     /**
@@ -155,7 +165,11 @@ class CentoswebpanelApi
      */
     public function unsuspendAccount($username)
     {
-        return $this->apiRequest('account_unsuspend', ['username' => $username]);
+        $params = [
+            'user' => $username,
+            'action' => 'unsp'
+        ];
+        return $this->apiRequest('account', $params);
     }
 
     /**
@@ -177,29 +191,13 @@ class CentoswebpanelApi
      */
     public function accountExists($username)
     {
-        // Because the CentOS WebPanel API has no function to verify if an
-        // account exists, we will try to create an account, if the account
-        // is created means that the account does not exist.
-        $account = $this->createAccount([
-            'domain' => $username . '.com',
-            'username' => $username,
-            'password' => base64_encode(mt_rand()),
-            'package' => 1,
-            'email' => $username . '@' . $username . '.mail',
-            'inode' => 10000,
-            'nofile' => 100,
-            'nproc' => 25
-        ]);
+        $params = [
+            'user' => $username,
+            'action' => 'list'
+        ];
 
-        if ($account['success']) {
-            // We just want to check if the account exists, therefore we
-            // will delete the previously created account.
-            $this->removeAccount($username);
-
-            return false;
-        }
-
-        return true;
+        $accountResponse = $this->apiRequest('accountdetail', $params);
+        return $accountResponse->status() == 200 && empty($accountResponse->errors());
     }
 
     /**

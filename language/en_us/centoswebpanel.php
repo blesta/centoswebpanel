@@ -119,3 +119,5 @@ $lang['Centoswebpanel.!error.centoswebpanel_username.test'] = "The username may 
 $lang['Centoswebpanel.!error.centoswebpanel_username.length'] = 'The username must be between 1 and 16 characters in length.';
 $lang['Centoswebpanel.!error.centoswebpanel_password.valid'] = 'Password must be at least 8 characters in length.';
 $lang['Centoswebpanel.!error.centoswebpanel_password.matches'] = 'Password and Confirm Password do not match.';
+
+$lang['Centoswebpanel.!error.api'] = 'An internal error occurred, or the server did not respond to the request.';

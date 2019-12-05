@@ -13,7 +13,7 @@ class Centoswebpanel extends Module
     /**
      * @var string The version of this module
      */
-    private static $version = '1.2.0';
+    private static $version = '2.0.0';
     /**
      * @var string The authors of this module
      */
@@ -826,12 +826,21 @@ class Centoswebpanel extends Module
         if ($vars['use_module'] == 'true') {
             // Create CentOS WebPanel account
             $masked_params = $params;
-            $masked_params['password'] = '***';
+            $masked_params['pass'] = '***';
             $this->log($row->meta->host_name . '|account_new', serialize($masked_params), 'input', true);
             unset($masked_params);
-            $result = $this->parseResponse($api->createAccount($params));
 
-            if ($this->Input->errors()) {
+            $user_response = $api->createAccount($params);
+            $errors = $user_response->errors();
+            $success = $user_response->status() == 200 && empty($errors);
+            $this->log($row->meta->host_name . '|account_new', $user_response->raw(), 'output', $success);
+
+            if (!$success) {
+                $this->Input->setErrors([
+                    'account' => [
+                        'account' => empty($errors) ? Language::_('Centoswebpanel.!error.api', true) : $errors
+                    ]
+                ]);
                 return;
             }
 
@@ -957,7 +966,11 @@ class Centoswebpanel extends Module
                 'input',
                 true
             );
-            $this->parseResponse($api->suspendAccount($service_fields->centoswebpanel_username));
+
+            $user_response = $api->suspendAccount($service_fields->centoswebpanel_username);
+            $errors = $user_response->errors();
+            $success = $user_response->status() == 200 && empty($errors);
+            $this->log($row->meta->host_name . '|account_suspend', $user_response->raw(), 'output', $success);
         }
 
         return null;
@@ -995,7 +1008,11 @@ class Centoswebpanel extends Module
                 'input',
                 true
             );
-            $this->parseResponse($api->unsuspendAccount($service_fields->centoswebpanel_username));
+
+            $user_response = $api->unsuspendAccount($service_fields->centoswebpanel_username);
+            $errors = $user_response->errors();
+            $success = $user_response->status() == 200 && empty($errors);
+            $this->log($row->meta->host_name . '|account_unsuspend', $user_response->raw(), 'output', $success);
         }
 
         return null;
@@ -1021,7 +1038,9 @@ class Centoswebpanel extends Module
      */
     public function cancelService($package, $service, $parent_package = null, $parent_service = null)
     {
+        Loader::loadModels($this, ['Clients']);
         if (($row = $this->getModuleRow())) {
+            $client = $this->Clients->get($service->client_id);
             $api = $this->getApi($row->meta->host_name, $row->meta->api_key, $row->meta->use_ssl);
 
             $service_fields = $this->serviceFieldsToObject($service->fields);
@@ -1033,7 +1052,10 @@ class Centoswebpanel extends Module
                 'input',
                 true
             );
-            $this->parseResponse($api->removeAccount($service_fields->centoswebpanel_username));
+            $user_response = $api->removeAccount($service_fields->centoswebpanel_username, $client->email);
+            $errors = $user_response->errors();
+            $success = $user_response->status() == 200 && empty($errors);
+            $this->log($row->meta->host_name . '|account_remove', $user_response->raw(), 'output', $success);
 
             // Update the number of accounts on the server
             $this->updateAccountCount($row, false);
@@ -1341,15 +1363,15 @@ class Centoswebpanel extends Module
 
         if ($row) {
             $api = $this->getApi($row->meta->host_name, $row->meta->api_key, $row->meta->use_ssl);
-        }
 
-        // Username exists, create another instead
-        if ($api->accountExists($username)) {
-            for ($i = 0; strlen((string)$i) < 8; $i++) {
-                $new_username = substr($username, 0, -strlen((string)$i)) . $i;
-                if (!$api->accountExists($new_username)) {
-                    $username = $new_username;
-                    break;
+            // Username exists, create another instead
+            if ($api->accountExists($username)) {
+                for ($i = 0; strlen((string)$i) < 8; $i++) {
+                    $new_username = substr($username, 0, -strlen((string)$i)) . $i;
+                    if (!$api->accountExists($new_username)) {
+                        $username = $new_username;
+                        break;
+                    }
                 }
             }
         }
@@ -1389,13 +1411,14 @@ class Centoswebpanel extends Module
     {
         $fields = [
             'domain' => isset($vars['centoswebpanel_domain']) ? $vars['centoswebpanel_domain'] : null,
-            'username' => isset($vars['centoswebpanel_username']) ? $vars['centoswebpanel_username'] : null,
-            'password' => isset($vars['centoswebpanel_password']) ? $vars['centoswebpanel_password'] : null,
+            'user' => isset($vars['centoswebpanel_username']) ? $vars['centoswebpanel_username'] : null,
+            'pass' => isset($vars['centoswebpanel_password']) ? $vars['centoswebpanel_password'] : null,
             'email' => isset($vars['centoswebpanel_email']) ? $vars['centoswebpanel_email'] : null,
             'package' => $package->meta->package,
             'inode' => $package->meta->inode,
-            'nofile' => $package->meta->nofile,
-            'nproc' => $package->meta->nproc
+            'limit_nofile' => $package->meta->nofile,
+            'limit_nproc' => $package->meta->nproc,
+            'server_ips' => ['127.0.0.1']
         ];
 
         return $fields;
