@@ -889,6 +889,21 @@ class Centoswebpanel extends Module
         $api = $this->getApi($row->meta->host_name, $row->meta->port, $row->meta->api_key, $row->meta->use_ssl);
 
         $params = $this->getFieldsFromInput((array) $vars, $package, true);
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+
+        // Default fields using service fields
+        if (!isset($params['domain'])) {
+            $params['domain'] = $service_fields->centoswebpanel_domain;
+        }
+
+        if (!isset($params['pass'])) {
+            $params['pass'] = $service_fields->centoswebpanel_password;
+        }
+
+        if (!isset($params['user'])) {
+            $params['user'] = $service_fields->centoswebpanel_username;
+        }
+
         $this->validateService($package, $vars, true);
 
         if ($this->Input->errors()) {
@@ -900,8 +915,6 @@ class Centoswebpanel extends Module
             $params['centoswebpanel_domain'] = strtolower($params['centoswebpanel_domain']);
         }
 
-        $service_fields = $this->serviceFieldsToObject($service->fields);
-
         // Remove password if not being updated
         if (isset($params['centoswebpanel_password']) && $params['centoswebpanel_password'] == '') {
             unset($params['centoswebpanel_password']);
@@ -912,36 +925,50 @@ class Centoswebpanel extends Module
             // Update CentOS WebPanel account
             $masked_params = $params;
             $masked_params['pass'] = '***';
-            $this->log($row->meta->host_name . '|account_edit', serialize($masked_params), 'input', true);
+            $host_name = $row->meta->host_name;
 
+            // Attempt account edit (this seems to have no effect)
+            $this->log($host_name . '|account_edit', serialize($masked_params), 'input', true);
+            $user_response = $api->updateAccount($params);
+            $user_errors = $user_response->errors();
+            $user_success = $user_response->status() == 200 && empty($user_errors);
+            $this->log($host_name . '|account_edit', $user_response->raw(), 'output', $user_success);
 
-
-            // changepack || ['action'] = 'udp';
-            // changepass || ['action'] = 'udp';
-            // account || ['action'] = 'udp';
-
-
-
-            $user_response = $api->updateAccount(['openfiles' => 20, 'limit_nproc' => 20, 'user' => 'hostdom4']);
-            $errors = $user_response->errors();
-            $success = $user_response->status() == 200 && empty($errors);
-            $this->log($row->meta->host_name . '|account_edit', $user_response->raw(), 'output', $success);
-
-            if (!$success) {
+            if (!$user_success) {
                 $this->Input->setErrors([
                     'account' => [
-                        'account' => empty($errors) ? Language::_('Centoswebpanel.!error.api', true) : $errors
+                        'account' => empty($user_errors) ? Language::_('Centoswebpanel.!error.api', true) : $user_errors
                     ]
                 ]);
                 return;
             }
+
+            // Attempt account password change
+            $password_params = ['user' => $params['user'], 'pass' => $params['pass']];
+            $this->log($host_name . '|account_changepass', serialize($password_params), 'input', true);
+            $password_response = $api->updatePassword($password_params);
+            $password_errors = $password_response->errors();
+            $password_success = $password_response->status() == 200 && empty($password_errors);
+            $this->log($host_name . '|account_changepass', $password_response->raw(), 'output', $password_success);
+
+            // Attempt account package change (this seems to have no effect)
+            $package_params = ['user' => $params['user'], 'package' => $params['package']];
+            $this->log($host_name . '|account_changepack', serialize($package_params), 'input', true);
+            $package_response = $api->updatePackage($package_params);
+            $package_errors = $package_response->errors();
+            $package_success = $package_response->status() == 200 && empty($package_errors);
+            $this->log($host_name . '|account_changepack', $package_response->raw(), 'output', $package_success);
         }
 
         // Set fields to update locally
-        $fields = ['centoswebpanel_domain', 'centoswebpanel_username', 'centoswebpanel_password'];
-        foreach ($fields as $field) {
-            if (property_exists($service_fields, $field) && isset($params[$field])) {
-                $service_fields->{$field} = $params[$field];
+        $field_mappings = [
+            'domain' => 'centoswebpanel_domain',
+            'user' => 'centoswebpanel_username',
+            'pass' => 'centoswebpanel_password'
+        ];
+        foreach ($field_mappings as $field => $field_mapping) {
+            if (property_exists($service_fields, $field_mapping) && isset($params[$field])) {
+                $service_fields->{$field_mapping} = $params[$field];
             }
         }
 

@@ -200,6 +200,34 @@ class CentoswebpanelApi
     }
 
     /**
+     * Updates the password for the given user.
+     *
+     * @param array $params An array contaning the following arguments:
+     *  - user: Username to create
+     *  - pass: Password for the account
+     * @return CentoswebpanelResponse An object containing the request response
+     */
+    public function updatePassword(array $params)
+    {
+        $params['action'] = 'udp';
+        return $this->apiRequest('changepass', $params);
+    }
+
+    /**
+     * Updates the package for the given user.
+     *
+     * @param array $params An array contaning the following arguments:
+     *  - user: Username to create
+     *  - package: Password for the account
+     * @return CentoswebpanelResponse An object containing the request response
+     */
+    public function updatePackage(array $params)
+    {
+        $params['action'] = 'udp';
+        return $this->apiRequest('changepack', $params);
+    }
+
+    /**
      * Gets a list
      *
      * @return type
