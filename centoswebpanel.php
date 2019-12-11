@@ -1511,6 +1511,13 @@ class Centoswebpanel extends Module
                     'message' => Language::_('Centoswebpanel.!error.host_name_valid', true)
                 ]
             ],
+            'port' => [
+                'valid' => [
+                    'rule' => 'isEmpty',
+                    'negate' => true,
+                    'message' => Language::_('Centoswebpanel.!error.port_valid', true)
+                ]
+            ],
             'api_key' => [
                 'valid' => [
                     'last' => true,

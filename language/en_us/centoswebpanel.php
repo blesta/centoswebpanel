@@ -92,6 +92,7 @@ $lang['Centoswebpanel.service_field.tooltip.password'] = 'You may leave the pass
 $lang['Centoswebpanel.!error.server_name_valid'] = 'You must enter a Server Label.';
 $lang['Centoswebpanel.!error.host_name_valid'] = 'The Hostname appears to be invalid.';
 $lang['Centoswebpanel.!error.user_name_valid'] = 'The User Name appears to be invalid.';
+$lang['Centoswebpanel.!error.port_valid'] = 'You must enter a port.';
 $lang['Centoswebpanel.!error.remote_api_key_valid'] = 'The API Key appears to be invalid.';
 $lang['Centoswebpanel.!error.remote_api_key_valid_connection'] = 'A connection to the server could not be established. Please check to ensure that the Hostname and API Key are correct.';
 $lang['Centoswebpanel.!error.account_limit_valid'] = 'Account Limit must be left blank (for unlimited accounts) or set to some integer value.';

@@ -92,10 +92,8 @@ class CentoswebpanelApi
         $result = curl_exec($ch);
         if (curl_errno($ch)) {
             $error = [
-                'errors' => [
-                    (object)['detail' => 'An internal error occurred, or the server did not respond to the request.']
-                ],
-                'status' => 500
+                'status' => 'Error',
+                'msj' => 'An internal error occurred, or the server did not respond to the request.'
             ];
 
             return new CentoswebpanelResponse(['content' => json_encode($error), 'headers' => []]);
@@ -114,7 +112,7 @@ class CentoswebpanelApi
      *
      * @param array $params An array contaning the following arguments:
      *  - domain: Main domain associated with the account
-     *  - user: Username to create
+     *  - user: Username for the account
      *  - pass: Password for the account
      *  - email: Email Address of the account owner
      *  - package: Create account with package
@@ -135,7 +133,7 @@ class CentoswebpanelApi
      * Updates an account in the server.
      *
      * @param array $params An array contaning the following arguments:
-     *  - user: Username to create
+     *  - user: Username of the account being edited
      *  - email: Email Address of the account owner
      *  - package: Create account with package
      *  - inode: The account inodes limit, 0 for unlimited
@@ -203,8 +201,8 @@ class CentoswebpanelApi
      * Updates the password for the given user.
      *
      * @param array $params An array contaning the following arguments:
-     *  - user: Username to create
-     *  - pass: Password for the account
+     *  - user: Username of the account to edit
+     *  - pass: The new password for the account
      * @return CentoswebpanelResponse An object containing the request response
      */
     public function updatePassword(array $params)
@@ -217,7 +215,7 @@ class CentoswebpanelApi
      * Updates the package for the given user.
      *
      * @param array $params An array contaning the following arguments:
-     *  - user: Username to create
+     *  - user: Username of the account to edit
      *  - package: Password for the account
      * @return CentoswebpanelResponse An object containing the request response
      */
