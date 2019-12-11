@@ -818,6 +818,7 @@ class Centoswebpanel extends Module
         }
 
         $params = $this->getFieldsFromInput((array) $vars, $package);
+        $params['server_ips'] = $row->meta->host_name;
 
         $this->validateService($package, $vars);
 
@@ -896,6 +897,7 @@ class Centoswebpanel extends Module
 
         $params = $this->getFieldsFromInput((array) $vars, $package, true);
         $service_fields = $this->serviceFieldsToObject($service->fields);
+        $params['server_ips'] = $row->meta->host_name;
 
         // Default fields using service fields
         if (!isset($params['domain'])) {
@@ -1428,9 +1430,6 @@ class Centoswebpanel extends Module
             'inode' => $package->meta->inode,
             'limit_nofile' => $package->meta->nofile,
             'limit_nproc' => $package->meta->nproc,
-            // Figure out a real way to select this, maybe as a service
-            // or package field, maybe populated using an api call
-            'server_ips' => '127.0.0.1'
         ];
 
         return $fields;
