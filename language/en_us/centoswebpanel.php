@@ -83,6 +83,8 @@ $lang['Centoswebpanel.service_info.options'] = 'Options';
 $lang['Centoswebpanel.service_info.option_login'] = 'Log in';
 
 // Tooltips
+$lang['Centoswebpanel.service_field.tooltip.domain_edit'] = 'This change will not affect CentOS Web Panel, but only change the local record in Blesta.';
+$lang['Centoswebpanel.service_field.tooltip.username_edit'] = 'This change will not affect CentOS Web Panel, but only change the local record in Blesta.';
 $lang['Centoswebpanel.service_field.tooltip.username'] = 'You may leave the username blank to automatically generate one.';
 $lang['Centoswebpanel.service_field.tooltip.password'] = 'You may leave the password blank to automatically generate one.';
 

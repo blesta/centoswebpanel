@@ -647,6 +647,9 @@ class Centoswebpanel extends Module
                 ['id' => 'centoswebpanel_domain']
             )
         );
+        // Add tooltip
+        $tooltip = $fields->tooltip(Language::_('Centoswebpanel.service_field.tooltip.domain_edit', true));
+        $domain->attach($tooltip);
         // Set the label as a field
         $fields->setField($domain);
 
@@ -663,6 +666,9 @@ class Centoswebpanel extends Module
                 ['id' => 'centoswebpanel_username']
             )
         );
+        // Add tooltip
+        $tooltip = $fields->tooltip(Language::_('Centoswebpanel.service_field.tooltip.username_edit', true));
+        $username->attach($tooltip);
         // Set the label as a field
         $fields->setField($username);
 
