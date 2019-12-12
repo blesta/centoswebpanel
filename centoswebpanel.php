@@ -918,14 +918,14 @@ class Centoswebpanel extends Module
             return;
         }
 
-        if (isset($params['centoswebpanel_domain'])) {
+        if (isset($params['domain'])) {
             // Force domain to lower case
-            $params['centoswebpanel_domain'] = strtolower($params['centoswebpanel_domain']);
+            $params['domain'] = strtolower($params['domain']);
         }
 
         // Remove password if not being updated
-        if (isset($params['centoswebpanel_password']) && $params['centoswebpanel_password'] == '') {
-            unset($params['centoswebpanel_password']);
+        if (isset($params['pass']) && $params['pass'] == '') {
+            unset($params['pass']);
         }
 
         // Only update the service if 'use_module' is true

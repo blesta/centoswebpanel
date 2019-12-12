@@ -90,7 +90,9 @@ class CentoswebpanelApi
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
         $result = curl_exec($ch);
-        if (curl_errno($ch)) {
+        $error_number = curl_errno($ch);
+        curl_close($ch);
+        if ($error_number) {
             $error = [
                 'status' => 'Error',
                 'msj' => 'An internal error occurred, or the server did not respond to the request.'
@@ -99,7 +101,6 @@ class CentoswebpanelApi
             return new CentoswebpanelResponse(['content' => json_encode($error), 'headers' => []]);
         }
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
 
         // Return request response
         return new CentoswebpanelResponse(
