@@ -91,6 +91,7 @@ class CentoswebpanelApi
 
         $result = curl_exec($ch);
         $error_number = curl_errno($ch);
+        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         curl_close($ch);
         if ($error_number) {
             $error = [
@@ -100,7 +101,6 @@ class CentoswebpanelApi
 
             return new CentoswebpanelResponse(['content' => json_encode($error), 'headers' => []]);
         }
-        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 
         // Return request response
         return new CentoswebpanelResponse(
