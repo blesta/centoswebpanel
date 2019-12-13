@@ -7,8 +7,6 @@ $lang['Centoswebpanel.name'] = 'CentOS WebPanel';
 $lang['Centoswebpanel.module_row'] = 'Server';
 $lang['Centoswebpanel.module_row_plural'] = 'Servers';
 $lang['Centoswebpanel.module_group'] = 'Server Group';
-$lang['Centoswebpanel.tab_firewall'] = 'Firewall';
-$lang['Centoswebpanel.tab_client_firewall'] = 'Firewall';
 
 // Module management
 $lang['Centoswebpanel.add_module_row'] = 'Add Server';
@@ -60,6 +58,8 @@ $lang['Centoswebpanel.edit_row.add_btn'] = 'Edit Server';
 
 $lang['Centoswebpanel.row_meta.server_name'] = 'Server Label';
 $lang['Centoswebpanel.row_meta.host_name'] = 'Hostname';
+$lang['Centoswebpanel.row_meta.port'] = 'Port';
+$lang['Centoswebpanel.row_meta.default_port'] = '2304';
 $lang['Centoswebpanel.row_meta.api_key'] = 'API Key';
 $lang['Centoswebpanel.row_meta.use_ssl'] = 'Use SSL when connecting to the API (recommended)';
 $lang['Centoswebpanel.row_meta.account_limit'] = 'Account Limit';
@@ -75,16 +75,6 @@ $lang['Centoswebpanel.service_field.domain'] = 'Domain';
 $lang['Centoswebpanel.service_field.username'] = 'Username';
 $lang['Centoswebpanel.service_field.password'] = 'Password';
 
-// Service management
-$lang['Centoswebpanel.tab_firewall.unblock_ip_title'] = 'Unblock IP';
-$lang['Centoswebpanel.tab_firewall.field_ip_address'] = 'IP Address';
-$lang['Centoswebpanel.tab_firewall.button_unblock'] = 'Unblock';
-
-// Client actions
-$lang['Centoswebpanel.tab_client_firewall.unblock_ip_title'] = 'Unblock IP';
-$lang['Centoswebpanel.tab_client_firewall.field_ip_address'] = 'IP Address';
-$lang['Centoswebpanel.tab_client_firewall.button_unblock'] = 'Unblock';
-
 // Service info
 $lang['Centoswebpanel.service_info.username'] = 'Username';
 $lang['Centoswebpanel.service_info.password'] = 'Password';
@@ -93,6 +83,8 @@ $lang['Centoswebpanel.service_info.options'] = 'Options';
 $lang['Centoswebpanel.service_info.option_login'] = 'Log in';
 
 // Tooltips
+$lang['Centoswebpanel.service_field.tooltip.domain_edit'] = 'This change will not affect CentOS Web Panel, but only change the local record in Blesta.';
+$lang['Centoswebpanel.service_field.tooltip.username_edit'] = 'This change will not affect CentOS Web Panel, but only change the local record in Blesta.';
 $lang['Centoswebpanel.service_field.tooltip.username'] = 'You may leave the username blank to automatically generate one.';
 $lang['Centoswebpanel.service_field.tooltip.password'] = 'You may leave the password blank to automatically generate one.';
 
@@ -100,6 +92,7 @@ $lang['Centoswebpanel.service_field.tooltip.password'] = 'You may leave the pass
 $lang['Centoswebpanel.!error.server_name_valid'] = 'You must enter a Server Label.';
 $lang['Centoswebpanel.!error.host_name_valid'] = 'The Hostname appears to be invalid.';
 $lang['Centoswebpanel.!error.user_name_valid'] = 'The User Name appears to be invalid.';
+$lang['Centoswebpanel.!error.port_valid'] = 'You must enter a port.';
 $lang['Centoswebpanel.!error.remote_api_key_valid'] = 'The API Key appears to be invalid.';
 $lang['Centoswebpanel.!error.remote_api_key_valid_connection'] = 'A connection to the server could not be established. Please check to ensure that the Hostname and API Key are correct.';
 $lang['Centoswebpanel.!error.account_limit_valid'] = 'Account Limit must be left blank (for unlimited accounts) or set to some integer value.';
@@ -119,3 +112,5 @@ $lang['Centoswebpanel.!error.centoswebpanel_username.test'] = "The username may 
 $lang['Centoswebpanel.!error.centoswebpanel_username.length'] = 'The username must be between 1 and 16 characters in length.';
 $lang['Centoswebpanel.!error.centoswebpanel_password.valid'] = 'Password must be at least 8 characters in length.';
 $lang['Centoswebpanel.!error.centoswebpanel_password.matches'] = 'Password and Confirm Password do not match.';
+
+$lang['Centoswebpanel.!error.api'] = 'An internal error occurred, or the server did not respond to the request.';

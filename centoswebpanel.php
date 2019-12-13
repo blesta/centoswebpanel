@@ -14,7 +14,7 @@ class Centoswebpanel extends Module
     /**
      * @var string The version of this module
      */
-    private static $version = '1.3.0';
+    private static $version = '2.0.0';
     /**
      * @var string The authors of this module
      */
@@ -30,6 +30,33 @@ class Centoswebpanel extends Module
 
         // Load the language required by this module
         Language::loadLang('centoswebpanel', null, dirname(__FILE__) . DS . 'language' . DS);
+    }
+
+    /**
+     * Performs migration of data from $current_version (the current installed version)
+     * to the given file set version. Sets Input errors on failure, preventing
+     * the module from being upgraded.
+     *
+     * @param string $current_version The current installed version of this module
+     */
+    public function upgrade($current_version)
+    {
+        if (version_compare($current_version, '2.0.0', '<')) {
+            if (!isset($this->ModuleManager)) {
+                Loader::loadModels($this, ['ModuleManager']);
+            }
+
+            // Update all module rows to have a port of 2304
+            $modules = $this->ModuleManager->getByClass('centoswebpanel');
+            foreach ($modules as $module) {
+                $rows = $this->ModuleManager->getRows($module->id);
+                foreach ($rows as $row) {
+                    $meta = (array)$row->meta;
+                    $meta['port'] = '2304';
+                    $this->ModuleManager->editRow($row->id, $meta);
+                }
+            }
+        }
     }
 
     /**
@@ -60,36 +87,6 @@ class Centoswebpanel extends Module
     public function getAuthors()
     {
         return self::$authors;
-    }
-
-    /**
-     * Returns all tabs to display to an admin when managing a service whose
-     * package uses this module.
-     *
-     * @param stdClass $package A stdClass object representing the selected package
-     * @return array An array of tabs in the format of method => title.
-     *  Example: array('methodName' => "Title", 'methodName2' => "Title2")
-     */
-    public function getAdminTabs($package)
-    {
-        return [
-            'tabFirewall' => Language::_('Centoswebpanel.tab_firewall', true)
-        ];
-    }
-
-    /**
-     * Returns all tabs to display to a client when managing a service whose
-     * package uses this module.
-     *
-     * @param stdClass $package A stdClass object representing the selected package
-     * @return array An array of tabs in the format of method => title.
-     *  Example: array('methodName' => "Title", 'methodName2' => "Title2")
-     */
-    public function getClientTabs($package)
-    {
-        return [
-            'tabClientFirewall' => Language::_('Centoswebpanel.tab_client_firewall', true)
-        ];
     }
 
     /**
@@ -411,7 +408,7 @@ class Centoswebpanel extends Module
      */
     public function addModuleRow(array &$vars)
     {
-        $meta_fields = ['server_name', 'host_name', 'api_key',
+        $meta_fields = ['server_name', 'host_name', 'port', 'api_key',
             'use_ssl', 'account_limit', 'name_servers', 'notes'];
         $encrypted_fields = ['api_key'];
 
@@ -454,7 +451,7 @@ class Centoswebpanel extends Module
      */
     public function editModuleRow($module_row, array &$vars)
     {
-        $meta_fields = ['server_name', 'host_name', 'api_key',
+        $meta_fields = ['server_name', 'host_name', 'port', 'api_key',
             'use_ssl', 'account_limit', 'account_count', 'name_servers', 'notes'];
         $encrypted_fields = ['api_key'];
 
@@ -651,6 +648,9 @@ class Centoswebpanel extends Module
                 ['id' => 'centoswebpanel_domain']
             )
         );
+        // Add tooltip
+        $tooltip = $fields->tooltip(Language::_('Centoswebpanel.service_field.tooltip.domain_edit', true));
+        $domain->attach($tooltip);
         // Set the label as a field
         $fields->setField($domain);
 
@@ -667,6 +667,9 @@ class Centoswebpanel extends Module
                 ['id' => 'centoswebpanel_username']
             )
         );
+        // Add tooltip
+        $tooltip = $fields->tooltip(Language::_('Centoswebpanel.service_field.tooltip.username_edit', true));
+        $username->attach($tooltip);
         // Set the label as a field
         $fields->setField($username);
 
@@ -790,7 +793,7 @@ class Centoswebpanel extends Module
             return;
         }
 
-        $api = $this->getApi($row->meta->host_name, $row->meta->api_key, $row->meta->use_ssl);
+        $api = $this->getApi($row->meta->host_name, $row->meta->port, $row->meta->api_key, $row->meta->use_ssl);
 
         // Generate username/password
         if (array_key_exists('centoswebpanel_domain', $vars)) {
@@ -816,6 +819,7 @@ class Centoswebpanel extends Module
         }
 
         $params = $this->getFieldsFromInput((array) $vars, $package);
+        $params['server_ips'] = $row->meta->host_name;
 
         $this->validateService($package, $vars);
 
@@ -827,12 +831,21 @@ class Centoswebpanel extends Module
         if ($vars['use_module'] == 'true') {
             // Create CentOS WebPanel account
             $masked_params = $params;
-            $masked_params['password'] = '***';
+            $masked_params['pass'] = '***';
             $this->log($row->meta->host_name . '|account_new', serialize($masked_params), 'input', true);
             unset($masked_params);
-            $result = $this->parseResponse($api->createAccount($params));
 
-            if ($this->Input->errors()) {
+            $user_response = $api->createAccount($params);
+            $errors = $user_response->errors();
+            $success = $user_response->status() == 200 && empty($errors);
+            $this->log($row->meta->host_name . '|account_new', $user_response->raw(), 'output', $success);
+
+            if (!$success) {
+                $this->Input->setErrors([
+                    'account' => [
+                        'account' => empty($errors) ? Language::_('Centoswebpanel.!error.api', true) : $errors
+                    ]
+                ]);
                 return;
             }
 
@@ -881,7 +894,24 @@ class Centoswebpanel extends Module
     public function editService($package, $service, array $vars = null, $parent_package = null, $parent_service = null)
     {
         $row = $this->getModuleRow();
-        $api = $this->getApi($row->meta->host_name, $row->meta->api_key, $row->meta->use_ssl);
+        $api = $this->getApi($row->meta->host_name, $row->meta->port, $row->meta->api_key, $row->meta->use_ssl);
+
+        $params = $this->getFieldsFromInput((array) $vars, $package, true);
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+        $params['server_ips'] = $row->meta->host_name;
+
+        // Default fields using service fields
+        if (!isset($params['domain'])) {
+            $params['domain'] = $service_fields->centoswebpanel_domain;
+        }
+
+        if (!isset($params['pass'])) {
+            $params['pass'] = $service_fields->centoswebpanel_password;
+        }
+
+        if (!isset($params['user'])) {
+            $params['user'] = $service_fields->centoswebpanel_username;
+        }
 
         $this->validateService($package, $vars, true);
 
@@ -889,30 +919,65 @@ class Centoswebpanel extends Module
             return;
         }
 
-        if (isset($vars['centoswebpanel_domain'])) {
+        if (isset($params['domain'])) {
             // Force domain to lower case
-            $vars['centoswebpanel_domain'] = strtolower($vars['centoswebpanel_domain']);
+            $params['domain'] = strtolower($params['domain']);
         }
 
-        $service_fields = $this->serviceFieldsToObject($service->fields);
-
         // Remove password if not being updated
-        if (isset($vars['centoswebpanel_password']) && $vars['centoswebpanel_password'] == '') {
-            unset($vars['centoswebpanel_password']);
+        if (isset($params['pass']) && $params['pass'] == '') {
+            unset($params['pass']);
         }
 
         // Only update the service if 'use_module' is true
         if ($vars['use_module'] == 'true') {
-            // Unfortunately the CentOS WebPanel API does not support updating
-            // any of the account fields, so nothing to do here. :(
-            // We will only update the fields locally.
+            // Update CentOS WebPanel account
+            $masked_params = $params;
+            $masked_params['pass'] = '***';
+            $host_name = $row->meta->host_name;
+
+            // Attempt account edit (this seems to have no effect)
+            $this->log($host_name . '|account_edit', serialize($masked_params), 'input', true);
+            $user_response = $api->updateAccount($params);
+            $user_errors = $user_response->errors();
+            $user_success = $user_response->status() == 200 && empty($user_errors);
+            $this->log($host_name . '|account_edit', $user_response->raw(), 'output', $user_success);
+
+            if (!$user_success) {
+                $this->Input->setErrors([
+                    'account' => [
+                        'account' => empty($user_errors) ? Language::_('Centoswebpanel.!error.api', true) : $user_errors
+                    ]
+                ]);
+                return;
+            }
+
+            // Attempt account password change
+            $password_params = ['user' => $params['user'], 'pass' => $params['pass']];
+            $this->log($host_name . '|account_changepass', serialize($password_params), 'input', true);
+            $password_response = $api->updatePassword($password_params);
+            $password_errors = $password_response->errors();
+            $password_success = $password_response->status() == 200 && empty($password_errors);
+            $this->log($host_name . '|account_changepass', $password_response->raw(), 'output', $password_success);
+
+            // Attempt account package change (this seems to have no effect)
+            $package_params = ['user' => $params['user'], 'package' => $params['package']];
+            $this->log($host_name . '|account_changepack', serialize($package_params), 'input', true);
+            $package_response = $api->updatePackage($package_params);
+            $package_errors = $package_response->errors();
+            $package_success = $package_response->status() == 200 && empty($package_errors);
+            $this->log($host_name . '|account_changepack', $package_response->raw(), 'output', $package_success);
         }
 
         // Set fields to update locally
-        $fields = ['centoswebpanel_domain', 'centoswebpanel_username', 'centoswebpanel_password'];
-        foreach ($fields as $field) {
-            if (property_exists($service_fields, $field) && isset($vars[$field])) {
-                $service_fields->{$field} = $vars[$field];
+        $field_mappings = [
+            'domain' => 'centoswebpanel_domain',
+            'user' => 'centoswebpanel_username',
+            'pass' => 'centoswebpanel_password'
+        ];
+        foreach ($field_mappings as $field => $field_mapping) {
+            if (property_exists($service_fields, $field_mapping) && isset($params[$field])) {
+                $service_fields->{$field_mapping} = $params[$field];
             }
         }
 
@@ -947,7 +1012,7 @@ class Centoswebpanel extends Module
     public function suspendService($package, $service, $parent_package = null, $parent_service = null)
     {
         if (($row = $this->getModuleRow())) {
-            $api = $this->getApi($row->meta->host_name, $row->meta->api_key, $row->meta->use_ssl);
+            $api = $this->getApi($row->meta->host_name, $row->meta->port, $row->meta->api_key, $row->meta->use_ssl);
 
             $service_fields = $this->serviceFieldsToObject($service->fields);
 
@@ -958,7 +1023,19 @@ class Centoswebpanel extends Module
                 'input',
                 true
             );
-            $this->parseResponse($api->suspendAccount($service_fields->centoswebpanel_username));
+
+            $user_response = $api->suspendAccount($service_fields->centoswebpanel_username);
+            $errors = $user_response->errors();
+            $success = $user_response->status() == 200 && empty($errors);
+            $this->log($row->meta->host_name . '|account_suspend', $user_response->raw(), 'output', $success);
+
+            if (!$success) {
+                $this->Input->setErrors([
+                    'account' => [
+                        'account' => empty($errors) ? Language::_('Centoswebpanel.!error.api', true) : $errors
+                    ]
+                ]);
+            }
         }
 
         return null;
@@ -985,7 +1062,7 @@ class Centoswebpanel extends Module
     public function unsuspendService($package, $service, $parent_package = null, $parent_service = null)
     {
         if (($row = $this->getModuleRow())) {
-            $api = $this->getApi($row->meta->host_name, $row->meta->api_key, $row->meta->use_ssl);
+            $api = $this->getApi($row->meta->host_name, $row->meta->port, $row->meta->api_key, $row->meta->use_ssl);
 
             $service_fields = $this->serviceFieldsToObject($service->fields);
 
@@ -996,7 +1073,19 @@ class Centoswebpanel extends Module
                 'input',
                 true
             );
-            $this->parseResponse($api->unsuspendAccount($service_fields->centoswebpanel_username));
+
+            $user_response = $api->unsuspendAccount($service_fields->centoswebpanel_username);
+            $errors = $user_response->errors();
+            $success = $user_response->status() == 200 && empty($errors);
+            $this->log($row->meta->host_name . '|account_unsuspend', $user_response->raw(), 'output', $success);
+
+            if (!$success) {
+                $this->Input->setErrors([
+                    'account' => [
+                        'account' => empty($errors) ? Language::_('Centoswebpanel.!error.api', true) : $errors
+                    ]
+                ]);
+            }
         }
 
         return null;
@@ -1022,8 +1111,10 @@ class Centoswebpanel extends Module
      */
     public function cancelService($package, $service, $parent_package = null, $parent_service = null)
     {
+        Loader::loadModels($this, ['Clients']);
         if (($row = $this->getModuleRow())) {
-            $api = $this->getApi($row->meta->host_name, $row->meta->api_key, $row->meta->use_ssl);
+            $client = $this->Clients->get($service->client_id);
+            $api = $this->getApi($row->meta->host_name, $row->meta->port, $row->meta->api_key, $row->meta->use_ssl);
 
             $service_fields = $this->serviceFieldsToObject($service->fields);
 
@@ -1034,10 +1125,21 @@ class Centoswebpanel extends Module
                 'input',
                 true
             );
-            $this->parseResponse($api->removeAccount($service_fields->centoswebpanel_username));
+            $user_response = $api->removeAccount($service_fields->centoswebpanel_username, $client->email);
+            $errors = $user_response->errors();
+            $success = $user_response->status() == 200 && empty($errors);
+            $this->log($row->meta->host_name . '|account_remove', $user_response->raw(), 'output', $success);
 
-            // Update the number of accounts on the server
-            $this->updateAccountCount($row, false);
+            if (!$success) {
+                $this->Input->setErrors([
+                    'account' => [
+                        'account' => empty($errors) ? Language::_('Centoswebpanel.!error.api', true) : $errors
+                    ]
+                ]);
+            } else {
+                // Update the number of accounts on the server
+                $this->updateAccountCount($row, false);
+            }
         }
 
         return null;
@@ -1129,84 +1231,6 @@ class Centoswebpanel extends Module
     }
 
     /**
-     * Firewall tab.
-     *
-     * @param stdClass $package A stdClass object representing the current package
-     * @param stdClass $service A stdClass object representing the current service
-     * @param array $get Any GET parameters
-     * @param array $post Any POST parameters
-     * @param array $files Any FILES parameters
-     * @return string The string representing the contents of this tab
-     */
-    public function tabFirewall($package, $service, array $get = null, array $post = null, array $files = null)
-    {
-        $row = $this->getModuleRow();
-        $api = $this->getApi($row->meta->host_name, $row->meta->api_key, $row->meta->use_ssl);
-
-        $this->view = new View('tab_firewall', 'default');
-
-        // Load the helpers required for this view
-        Loader::loadHelpers($this, ['Form', 'Html']);
-
-        // Unblock IP address
-        if (!empty($post)) {
-            if (isset($post['unblock'])) {
-                $this->log($row->meta->host_name . '|unblock_ip', serialize($post['ip_address']), 'input', true);
-                $result = $this->parseResponse($api->unblockIp($post['ip_address']));
-            }
-        }
-
-        // Get client IP address
-        $ip_address = $api->getClientIp();
-
-        $this->view->set('ip_address', $ip_address);
-        $this->view->set('vars', (object) $this->Html->ifSet($post));
-
-        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'centoswebpanel' . DS);
-
-        return $this->view->fetch();
-    }
-
-    /**
-     * Client firewall tab.
-     *
-     * @param stdClass $package A stdClass object representing the current package
-     * @param stdClass $service A stdClass object representing the current service
-     * @param array $get Any GET parameters
-     * @param array $post Any POST parameters
-     * @param array $files Any FILES parameters
-     * @return string The string representing the contents of this tab
-     */
-    public function tabClientFirewall($package, $service, array $get = null, array $post = null, array $files = null)
-    {
-        $row = $this->getModuleRow();
-        $api = $this->getApi($row->meta->host_name, $row->meta->api_key, $row->meta->use_ssl);
-
-        $this->view = new View('tab_client_firewall', 'default');
-
-        // Load the helpers required for this view
-        Loader::loadHelpers($this, ['Form', 'Html']);
-
-        // Unblock IP address
-        if (!empty($post)) {
-            if (isset($post['unblock'])) {
-                $this->log($row->meta->host_name . '|unblock_ip', serialize($post['ip_address']), 'input', true);
-                $result = $this->parseResponse($api->unblockIp($post['ip_address']));
-            }
-        }
-
-        // Get client IP address
-        $ip_address = $api->getClientIp();
-
-        $this->view->set('ip_address', $ip_address);
-        $this->view->set('vars', (object) $this->Html->ifSet($post));
-
-        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'centoswebpanel' . DS);
-
-        return $this->view->fetch();
-    }
-
-    /**
      * Validates that the given hostname is valid.
      *
      * @param string $host_name The host name to validate
@@ -1287,16 +1311,26 @@ class Centoswebpanel extends Module
      *
      * @param mixed $api_key
      * @param mixed $hostname
+     * @param int port
      * @param mixed $use_ssl
      * @return bool True if the connection is valid, false otherwise
      */
-    public function validateConnection($api_key, $hostname, $use_ssl)
+    public function validateConnection($api_key, $hostname, $port, $use_ssl)
     {
         try {
-            $api = $this->getApi($hostname, $api_key, $use_ssl);
-            $response = $api->unblockIp($_SERVER['SERVER_ADDR']);
+            $api = $this->getApi($hostname, $port, $api_key, $use_ssl);
+            $this->log(
+                $hostname . '|validate_connection/packages_get',
+                serialize(['hostname' => $hostname, 'port' => $port, 'api_key' => $api_key, 'use_ssl' => $use_ssl]),
+                'input',
+                true
+            );
+            $response = $api->getPackages();
 
-            if (!empty($response)) {
+            $errors = $response->errors();
+            $success = $response->status() == 200 && empty($errors);
+            $this->log($hostname . '|validate_connection/packages_get', $response->raw(), 'output', $success);
+            if ($success) {
                 return true;
             }
         } catch (Exception $e) {
@@ -1335,16 +1369,16 @@ class Centoswebpanel extends Module
         $row = $this->getModuleRow();
 
         if ($row) {
-            $api = $this->getApi($row->meta->host_name, $row->meta->api_key, $row->meta->use_ssl);
-        }
+            $api = $this->getApi($row->meta->host_name, $row->meta->port, $row->meta->api_key, $row->meta->use_ssl);
 
-        // Username exists, create another instead
-        if ($api->accountExists($username)) {
-            for ($i = 0; strlen((string)$i) < 8; $i++) {
-                $new_username = substr($username, 0, -strlen((string)$i)) . $i;
-                if (!$api->accountExists($new_username)) {
-                    $username = $new_username;
-                    break;
+            // Username exists, create another instead
+            if ($api->accountExists($username)) {
+                for ($i = 0; strlen((string)$i) < 8; $i++) {
+                    $new_username = substr($username, 0, -strlen((string)$i)) . $i;
+                    if (!$api->accountExists($new_username)) {
+                        $username = $new_username;
+                        break;
+                    }
                 }
             }
         }
@@ -1384,13 +1418,13 @@ class Centoswebpanel extends Module
     {
         $fields = [
             'domain' => isset($vars['centoswebpanel_domain']) ? $vars['centoswebpanel_domain'] : null,
-            'username' => isset($vars['centoswebpanel_username']) ? $vars['centoswebpanel_username'] : null,
-            'password' => isset($vars['centoswebpanel_password']) ? $vars['centoswebpanel_password'] : null,
+            'user' => isset($vars['centoswebpanel_username']) ? $vars['centoswebpanel_username'] : null,
+            'pass' => isset($vars['centoswebpanel_password']) ? $vars['centoswebpanel_password'] : null,
             'email' => isset($vars['centoswebpanel_email']) ? $vars['centoswebpanel_email'] : null,
             'package' => $package->meta->package,
             'inode' => $package->meta->inode,
-            'nofile' => $package->meta->nofile,
-            'nproc' => $package->meta->nproc
+            'limit_nofile' => $package->meta->nofile,
+            'limit_nproc' => $package->meta->nproc,
         ];
 
         return $fields;
@@ -1435,15 +1469,16 @@ class Centoswebpanel extends Module
      * Initializes the CentoswebpanelApi and returns an instance of that object.
      *
      * @param string $hostname The host to the CentOS WebPanel server
+     * @param int $port The port on which to connect to the API
      * @param string $api_key The remote api key
      * @param mixed $use_ssl
      * @return CentoswebpanelApi The CentoswebpanelApi instance
      */
-    private function getApi($hostname, $api_key, $use_ssl = true)
+    private function getApi($hostname, $port, $api_key, $use_ssl = 'true')
     {
         Loader::load(dirname(__FILE__) . DS . 'apis' . DS . 'centoswebpanel_api.php');
 
-        $api = new CentoswebpanelApi($hostname, $api_key, $use_ssl);
+        $api = new CentoswebpanelApi($hostname, $port, $api_key, $use_ssl === 'true');
 
         return $api;
     }
@@ -1470,6 +1505,13 @@ class Centoswebpanel extends Module
                     'message' => Language::_('Centoswebpanel.!error.host_name_valid', true)
                 ]
             ],
+            'port' => [
+                'valid' => [
+                    'rule' => 'isEmpty',
+                    'negate' => true,
+                    'message' => Language::_('Centoswebpanel.!error.port_valid', true)
+                ]
+            ],
             'api_key' => [
                 'valid' => [
                     'last' => true,
@@ -1480,8 +1522,9 @@ class Centoswebpanel extends Module
                 'valid_connection' => [
                     'rule' => [
                         [$this, 'validateConnection'],
-                        $vars['host_name'],
-                        $vars['use_ssl'],
+                        isset($vars['host_name']) ? $vars['host_name'] : '',
+                        isset($vars['port']) ? $vars['port'] : '',
+                        isset($vars['use_ssl']) ? $vars['use_ssl'] : true,
                     ],
                     'message' => Language::_('Centoswebpanel.!error.remote_api_key_valid_connection', true)
                 ]

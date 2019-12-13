@@ -27,6 +27,12 @@
                     </li>
                     <li>
                         <?php
+                        $this->Form->label($this->_('Centoswebpanel.row_meta.port', true), 'port');
+                        $this->Form->fieldText('port', $this->Html->ifSet($vars->port));
+                        ?>
+                    </li>
+                    <li>
+                        <?php
                         $this->Form->label($this->_('Centoswebpanel.row_meta.api_key', true), 'api_key');
                         $this->Form->fieldText('api_key', $this->Html->ifSet($vars->api_key));
                         ?>
