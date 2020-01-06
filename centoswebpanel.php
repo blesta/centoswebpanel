@@ -14,7 +14,7 @@ class Centoswebpanel extends Module
     /**
      * @var string The version of this module
      */
-    private static $version = '2.0.0';
+    private static $version = '2.1.0';
     /**
      * @var string The authors of this module
      */
@@ -53,6 +53,23 @@ class Centoswebpanel extends Module
                 foreach ($rows as $row) {
                     $meta = (array)$row->meta;
                     $meta['port'] = '2304';
+                    $this->ModuleManager->editRow($row->id, $meta);
+                }
+            }
+        }
+
+        if (version_compare($current_version, '2.1.0', '<')) {
+            if (!isset($this->ModuleManager)) {
+                Loader::loadModels($this, ['ModuleManager']);
+            }
+
+            // Update all module rows to have a login port of 2031
+            $modules = $this->ModuleManager->getByClass('centoswebpanel');
+            foreach ($modules as $module) {
+                $rows = $this->ModuleManager->getRows($module->id);
+                foreach ($rows as $row) {
+                    $meta = (array)$row->meta;
+                    $meta['login_port'] = '2031';
                     $this->ModuleManager->editRow($row->id, $meta);
                 }
             }
@@ -408,7 +425,7 @@ class Centoswebpanel extends Module
      */
     public function addModuleRow(array &$vars)
     {
-        $meta_fields = ['server_name', 'host_name', 'port', 'api_key',
+        $meta_fields = ['server_name', 'host_name', 'login_port', 'port', 'api_key',
             'use_ssl', 'account_limit', 'name_servers', 'notes'];
         $encrypted_fields = ['api_key'];
 
@@ -451,7 +468,7 @@ class Centoswebpanel extends Module
      */
     public function editModuleRow($module_row, array &$vars)
     {
-        $meta_fields = ['server_name', 'host_name', 'port', 'api_key',
+        $meta_fields = ['server_name', 'host_name', 'login_port', 'port', 'api_key',
             'use_ssl', 'account_limit', 'account_count', 'name_servers', 'notes'];
         $encrypted_fields = ['api_key'];
 
@@ -1503,6 +1520,13 @@ class Centoswebpanel extends Module
                 'valid' => [
                     'rule' => [[$this, 'validateHostName']],
                     'message' => Language::_('Centoswebpanel.!error.host_name_valid', true)
+                ]
+            ],
+            'login_port' => [
+                'valid' => [
+                    'rule' => 'isEmpty',
+                    'negate' => true,
+                    'message' => Language::_('Centoswebpanel.!error.login_port_valid', true)
                 ]
             ],
             'port' => [
