@@ -17,7 +17,7 @@
                     <td><?php $this->Html->_($module_row->meta->host_name); ?></td>
                     <td>
                         <?php
-                            $this->Form->create($this->Html->safe('https://' . $this->Html->ifSet($module_row->meta->host_name) . ':2031/login/index.php'), ['target' => '_blank']);
+                            $this->Form->create($this->Html->safe('https://' . $this->Html->ifSet($module_row->meta->host_name) . ':' . $this->Html->ifSet($module_row->meta->login_port, $this->_('Centoswebpanel.row_meta.default_login_port', true)) . '/login/index.php'), ['target' => '_blank']);
                             $this->Form->fieldHidden('username', $this->Html->ifSet($service_fields->centoswebpanel_username));
                             $this->Form->fieldHidden('password', $this->Html->ifSet($service_fields->centoswebpanel_password));
                             $this->Form->fieldHidden('commit', 'Login');
