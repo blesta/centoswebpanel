@@ -1,0 +1,22 @@
+{
+    "version": "2.2.0",
+    "name": "Centoswebpanel.name",
+    "description": "Centoswebpanel.description",
+    "authors": [
+        {
+            "name": "Phillips Data, Inc.",
+            "url": "http://www.blesta.com"
+        }
+    ],
+    "service": {
+        "name_key": "centoswebpanel_domain"
+    },
+    "module": {
+        "row": "Centoswebpanel.module_row",
+        "rows": "Centoswebpanel.module_row_plural",
+        "row_key": "server_name"
+    },
+    "package": {
+        "name_key": ""
+    }
+}
