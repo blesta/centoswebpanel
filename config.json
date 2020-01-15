@@ -14,7 +14,8 @@
     "module": {
         "row": "Centoswebpanel.module_row",
         "rows": "Centoswebpanel.module_row_plural",
-        "row_key": "server_name"
+        "row_key": "server_name",
+        "group": "Centoswebpanel.module_group"
     },
     "package": {
         "name_key": ""
