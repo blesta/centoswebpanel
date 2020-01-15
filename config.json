@@ -18,6 +18,6 @@
         "group": "Centoswebpanel.module_group"
     },
     "package": {
-        "name_key": ""
+        "name_key": "centoswebpanel_domain"
     }
 }
