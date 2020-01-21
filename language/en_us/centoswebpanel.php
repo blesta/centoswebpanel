@@ -4,6 +4,7 @@
  */
 // Basics
 $lang['Centoswebpanel.name'] = 'CentOS WebPanel';
+$lang['Centoswebpanel.description'] = 'Free Web Hosting control panel designed for quick and easy management of (Dedicated & VPS) servers';
 $lang['Centoswebpanel.module_row'] = 'Server';
 $lang['Centoswebpanel.module_row_plural'] = 'Servers';
 $lang['Centoswebpanel.module_group'] = 'Server Group';
