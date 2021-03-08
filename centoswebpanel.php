@@ -495,7 +495,7 @@ class Centoswebpanel extends Module
         $domain->attach(
             $fields->fieldText(
                 'centoswebpanel_domain',
-                $this->Html->ifSet($vars->centoswebpanel_domain, $this->Html->ifSet($vars->domain)),
+                (isset($vars->centoswebpanel_domain) ? $vars->centoswebpanel_domain : ($vars->domain ?? null)),
                 ['id' => 'centoswebpanel_domain']
             )
         );
