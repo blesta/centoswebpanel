@@ -108,7 +108,7 @@ class Centoswebpanel extends Module
         $package->attach(
             $fields->fieldText(
                 'meta[package]',
-                $this->Html->ifSet($vars->meta['package']),
+                (isset($vars->meta['package']) ? $vars->meta['package'] : null),
                 ['id' => 'centoswebpanel_package']
             )
         );
@@ -121,7 +121,7 @@ class Centoswebpanel extends Module
         $inode->attach(
             $fields->fieldText(
                 'meta[inode]',
-                $this->Html->ifSet($vars->meta['inode']),
+                (isset($vars->meta['inode']) ? $vars->meta['inode'] : null),
                 ['id' => 'centoswebpanel_inode']
             )
         );
@@ -134,7 +134,7 @@ class Centoswebpanel extends Module
         $nofile->attach(
             $fields->fieldText(
                 'meta[nofile]',
-                $this->Html->ifSet($vars->meta['nofile']),
+                (isset($vars->meta['nofile']) ? $vars->meta['nofile'] : null),
                 ['id' => 'centoswebpanel_nofile']
             )
         );
@@ -147,7 +147,7 @@ class Centoswebpanel extends Module
         $nproc->attach(
             $fields->fieldText(
                 'meta[nproc]',
-                $this->Html->ifSet($vars->meta['nproc']),
+                (isset($vars->meta['nproc']) ? $vars->meta['nproc'] : null),
                 ['id' => 'centoswebpanel_nproc']
             )
         );
@@ -428,7 +428,7 @@ class Centoswebpanel extends Module
         $domain->attach(
             $fields->fieldText(
                 'centoswebpanel_domain',
-                $this->Html->ifSet($vars->centoswebpanel_domain),
+                (isset($vars->centoswebpanel_domain) ? $vars->centoswebpanel_domain : null),
                 ['id' => 'centoswebpanel_domain']
             )
         );
@@ -444,7 +444,7 @@ class Centoswebpanel extends Module
         $username->attach(
             $fields->fieldText(
                 'centoswebpanel_username',
-                $this->Html->ifSet($vars->centoswebpanel_username),
+                (isset($vars->centoswebpanel_username) ? $vars->centoswebpanel_username : null),
                 ['id' => 'centoswebpanel_username']
             )
         );
@@ -463,7 +463,7 @@ class Centoswebpanel extends Module
         $password->attach(
             $fields->fieldPassword(
                 'centoswebpanel_password',
-                ['id' => 'centoswebpanel_password', 'value' => $this->Html->ifSet($vars->centoswebpanel_password)]
+                ['id' => 'centoswebpanel_password', 'value' => (isset($vars->centoswebpanel_password) ? $vars->centoswebpanel_password : null)]
             )
         );
         // Add tooltip
@@ -495,7 +495,7 @@ class Centoswebpanel extends Module
         $domain->attach(
             $fields->fieldText(
                 'centoswebpanel_domain',
-                $this->Html->ifSet($vars->centoswebpanel_domain, $this->Html->ifSet($vars->domain)),
+                (isset($vars->centoswebpanel_domain) ? $vars->centoswebpanel_domain : ($vars->domain ?? null)),
                 ['id' => 'centoswebpanel_domain']
             )
         );
@@ -525,7 +525,7 @@ class Centoswebpanel extends Module
         $domain->attach(
             $fields->fieldText(
                 'centoswebpanel_domain',
-                $this->Html->ifSet($vars->centoswebpanel_domain),
+                (isset($vars->centoswebpanel_domain) ? $vars->centoswebpanel_domain : null),
                 ['id' => 'centoswebpanel_domain']
             )
         );
@@ -544,7 +544,7 @@ class Centoswebpanel extends Module
         $username->attach(
             $fields->fieldText(
                 'centoswebpanel_username',
-                $this->Html->ifSet($vars->centoswebpanel_username),
+                (isset($vars->centoswebpanel_username) ? $vars->centoswebpanel_username : null),
                 ['id' => 'centoswebpanel_username']
             )
         );
@@ -563,7 +563,7 @@ class Centoswebpanel extends Module
         $password->attach(
             $fields->fieldPassword(
                 'centoswebpanel_password',
-                ['id' => 'centoswebpanel_password', 'value' => $this->Html->ifSet($vars->centoswebpanel_password)]
+                ['id' => 'centoswebpanel_password', 'value' => (isset($vars->centoswebpanel_password) ? $vars->centoswebpanel_password : null)]
             )
         );
         // Set the label as a field
