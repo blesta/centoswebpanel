@@ -33,4 +33,5 @@ your Blesta installation path.
 |Blesta Version|Module Version|
 |--------------|--------------|
 |< v4.9.0|v2.1.0|
-|>= v4.9.0|v2.2.0|
+|>= v4.9.0|v2.2.0+|
+|>= v5.0.0|v2.4.0+|
