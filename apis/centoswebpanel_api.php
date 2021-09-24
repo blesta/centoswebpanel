@@ -1,4 +1,6 @@
 <?php
+use Blesta\Core\Util\Common\Traits\Container;
+
 require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'centoswebpanel_response.php';
 /**
  * CentOS WebPanel API.
@@ -11,6 +13,9 @@ require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'centoswebpanel_response.
  */
 class CentoswebpanelApi
 {
+    // Load traits
+    use Container;
+
     /**
      * @var string The server hostname
      */
@@ -45,6 +50,10 @@ class CentoswebpanelApi
         $this->port = $port;
         $this->key = $key;
         $this->use_ssl = $use_ssl;
+
+        // Initialize logger
+        $logger = $this->getFromContainer('logger');
+        $this->logger = $logger;
     }
 
     /**
@@ -86,21 +95,29 @@ class CentoswebpanelApi
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
         curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+        if (Configure::get('Blesta.curl_verify_ssl')) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
+        } else {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        }
 
         $result = curl_exec($ch);
-        $error_number = curl_errno($ch);
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
-        if ($error_number) {
+
+        if ($result == false) {
             $error = [
                 'status' => 'Error',
                 'msj' => 'An internal error occurred, or the server did not respond to the request.'
             ];
+            $this->logger->error(curl_error($ch));
 
             return new CentoswebpanelResponse(['content' => json_encode($error), 'headers' => []]);
         }
+
+        curl_close($ch);
 
         // Return request response
         return new CentoswebpanelResponse(
