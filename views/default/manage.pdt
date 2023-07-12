@@ -21,6 +21,7 @@
             <tr class="heading_row">
                 <td><span><?php $this->_('Centoswebpanel.manage.module_rows_heading.name'); ?></span></td>
                 <td><span><?php $this->_('Centoswebpanel.manage.module_rows_heading.hostname'); ?></span></td>
+                <td><span><?php $this->_('Centoswebpanel.manage.module_rows_heading.ip'); ?></span></td>
                 <td><span><?php $this->_('Centoswebpanel.manage.module_rows_heading.accounts'); ?></span></td>
                 <td class="last"><span><?php $this->_('Centoswebpanel.manage.module_rows_heading.options'); ?></span></td>
             </tr>
@@ -30,6 +31,7 @@
             <tr<?php echo ($i % 2 == 1) ? ' class="odd_row"' : ''; ?>>
                 <td><?php echo (isset($module->rows[$i]->meta->server_name) ? $this->Html->safe($module->rows[$i]->meta->server_name) : null); ?></td>
                 <td><?php echo (isset($module->rows[$i]->meta->host_name) ? $this->Html->safe($module->rows[$i]->meta->host_name) : null); ?></td>
+                <td><?php echo (isset($module->rows[$i]->meta->ip) ? $this->Html->safe($module->rows[$i]->meta->ip) : null); ?></td>
                 <td><?php $this->_('Centoswebpanel.manage.module_rows.count', false, (isset($module->rows[$i]->meta->account_count) ? $module->rows[$i]->meta->account_count : 0), ((isset($module->rows[$i]->meta->account_limit) ? $module->rows[$i]->meta->account_limit : null) == '' ? '∞' : $module->rows[$i]->meta->account_limit)); ?></td>
                 <td class="last">
                     <a href="<?php echo $this->Html->safe($this->base_uri . 'settings/company/modules/editrow/' . (isset($module->id) ? $module->id : null) . '/' . (isset($module->rows[$i]->id) ? $module->rows[$i]->id : null) . '/'); ?>"><?php $this->_('Centoswebpanel.manage.module_rows.edit'); ?></a>

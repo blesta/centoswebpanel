@@ -325,7 +325,7 @@ class Centoswebpanel extends Module
      */
     public function addModuleRow(array &$vars)
     {
-        $meta_fields = ['server_name', 'host_name', 'login_port', 'port', 'api_key',
+        $meta_fields = ['server_name', 'host_name', 'ip', 'login_port', 'port', 'api_key',
             'use_ssl', 'account_limit', 'name_servers', 'notes'];
         $encrypted_fields = ['api_key'];
 
@@ -368,7 +368,7 @@ class Centoswebpanel extends Module
      */
     public function editModuleRow($module_row, array &$vars)
     {
-        $meta_fields = ['server_name', 'host_name', 'login_port', 'port', 'api_key',
+        $meta_fields = ['server_name', 'host_name', 'ip', 'login_port', 'port', 'api_key',
             'use_ssl', 'account_limit', 'account_count', 'name_servers', 'notes'];
         $encrypted_fields = ['api_key'];
 
@@ -700,7 +700,7 @@ class Centoswebpanel extends Module
         }
 
         $params = $this->getFieldsFromInput((array) $vars, $package);
-        $params['server_ips'] = $row->meta->host_name;
+        $params['server_ips'] = $row->meta->ip;
 
         $this->validateService($package, $vars);
 
@@ -779,7 +779,7 @@ class Centoswebpanel extends Module
 
         $params = $this->getFieldsFromInput((array) $vars, $package, true);
         $service_fields = $this->serviceFieldsToObject($service->fields);
-        $params['server_ips'] = $row->meta->host_name;
+        $params['server_ips'] = $row->meta->ip;
 
         // Default fields using service fields
         if (!isset($params['domain'])) {
@@ -1124,6 +1124,18 @@ class Centoswebpanel extends Module
     }
 
     /**
+     * Validates that the given IP Address is valid.
+     *
+     * @param string $ip The IP to validate
+     * @return bool True if the IP is valid, false otherwise
+     */
+    public function validateIP($ip)
+    {
+        $validator = new Server();
+        return $validator->isIp($ip);
+    }
+
+    /**
      * Validates that at least 2 name servers are set in the given array of name servers.
      *
      * @param array $name_servers An array of name servers
@@ -1386,6 +1398,12 @@ class Centoswebpanel extends Module
                     'message' => Language::_('Centoswebpanel.!error.host_name_valid', true)
                 ]
             ],
+            'ip' => [
+                'valid' => [
+                    'rule' => [[$this, 'validateIP']],
+                    'message' => Language::_('Centoswebpanel.!error.ip_valid', true)
+                ]
+            ],            
             'login_port' => [
                 'valid' => [
                     'rule' => 'isEmpty',

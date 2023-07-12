@@ -27,6 +27,12 @@
                     </li>
                     <li>
                         <?php
+                        $this->Form->label($this->_('Centoswebpanel.row_meta.ip', true), 'ip');
+                        $this->Form->fieldText('ip', (isset($vars->ip) ? $vars->ip : null));
+                        ?>
+                    </li>
+                    <li>
+                        <?php
                         $this->Form->label($this->_('Centoswebpanel.row_meta.login_port', true), 'login_port');
                         $this->Form->fieldText('login_port', (isset($vars->login_port) ? $vars->login_port : $this->_('Centoswebpanel.row_meta.default_login_port', true)));
                         ?>
