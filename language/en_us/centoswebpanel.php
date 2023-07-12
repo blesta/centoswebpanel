@@ -16,6 +16,7 @@ $lang['Centoswebpanel.manage.module_rows_title'] = 'Servers';
 $lang['Centoswebpanel.manage.module_groups_title'] = 'Server Groups';
 $lang['Centoswebpanel.manage.module_rows_heading.name'] = 'Server Label';
 $lang['Centoswebpanel.manage.module_rows_heading.hostname'] = 'Hostname';
+$lang['Centoswebpanel.manage.module_rows_heading.ip'] = 'IP Address';
 $lang['Centoswebpanel.manage.module_rows_heading.accounts'] = 'Accounts';
 $lang['Centoswebpanel.manage.module_rows_heading.options'] = 'Options';
 $lang['Centoswebpanel.manage.module_groups_heading.name'] = 'Group Name';
@@ -59,6 +60,7 @@ $lang['Centoswebpanel.edit_row.add_btn'] = 'Edit Server';
 
 $lang['Centoswebpanel.row_meta.server_name'] = 'Server Label';
 $lang['Centoswebpanel.row_meta.host_name'] = 'Hostname';
+$lang['Centoswebpanel.row_meta.ip'] = 'IP Address';
 $lang['Centoswebpanel.row_meta.login_port'] = 'Login Port';
 $lang['Centoswebpanel.row_meta.default_login_port'] = '2031';
 $lang['Centoswebpanel.row_meta.port'] = 'API Port';
@@ -94,6 +96,7 @@ $lang['Centoswebpanel.service_field.tooltip.password'] = 'You may leave the pass
 // Errors
 $lang['Centoswebpanel.!error.server_name_valid'] = 'You must enter a Server Label.';
 $lang['Centoswebpanel.!error.host_name_valid'] = 'The Hostname appears to be invalid.';
+$lang['Centoswebpanel.!error.ip_valid'] = 'The IP Address appears to be invalid.';
 $lang['Centoswebpanel.!error.user_name_valid'] = 'The User Name appears to be invalid.';
 $lang['Centoswebpanel.!error.login_port_valid'] = 'You must enter a login port.';
 $lang['Centoswebpanel.!error.port_valid'] = 'You must enter an API port.';
