@@ -1,11 +1,15 @@
 {
-    "version": "2.6.0",
+    "version": "2.7.0",
     "name": "Centoswebpanel.name",
     "description": "Centoswebpanel.description",
     "authors": [
         {
             "name": "Phillips Data, Inc.",
             "url": "http://www.blesta.com"
+        },
+        {
+            "name": "Blesta Module",
+            "url": "http://www.blestamodule.com"
         }
     ],
     "package": {
