@@ -1,0 +1,438 @@
+<link href="<?php echo $this->view_dir;?>css/style.css" rel="stylesheet" type="text/css" />
+<script src="<?php echo $this->view_dir;?>js/chart.js"></script>
+
+<?php
+$account_info = $cwp_details['details'];
+$db_used = $account_info->account_info->db_used;
+$db_max = $account_info->account_info->db_max;
+$bandwidth_used = round($account_info->account_info->bandwidth_used);
+$bandwidth = $account_info->account_info->bandwidth;
+$ftp_accounts_used = $account_info->account_info->ftp_accounts_used;
+$ftp_accounts = $account_info->account_info->ftp_accounts;
+$email_accounts_used = $account_info->account_info->email_accounts_used;
+$email_accounts = $account_info->account_info->email_accounts;
+$sub_domains_used = $account_info->account_info->sub_domains_used;
+$sub_domains = $account_info->account_info->sub_domains;
+$addons_domains_used = $account_info->account_info->addons_domains_used;
+$addons_domains = $account_info->account_info->addons_domains - 1;
+$space_usage = $account_info->account_info->space_usage;
+$space_disk = $account_info->account_info->space_disk;
+?>
+
+<div class="row">
+    <div class="col-md-6">
+    <div class="ibox">
+      <div class="ibox-title">
+          <h5><i class="fa fa-globe"></i> <?php echo $this->_('Centoswebpanel.client.domaininfo'); ?></h5>
+      </div>
+          <div class="statistic-box ibox-content ">
+              <div class="row text-left">
+                <table class="table table-striped">
+                  <tr>
+                  <td><?php $this->_('Centoswebpanel.client.domain'); ?></td><td><?php echo (isset($cwp_details['domain']) ? $this->Html->safe($cwp_details['domain']) : null); ?></td>
+                  <td><?php $this->_('Centoswebpanel.client.status'); ?></td><td><?php echo (isset($cwp_details['status']) ? $this->Html->safe($cwp_details['status']) : null); ?></td>
+                  </tr>
+                <tr>
+                <td><?php $this->_('Centoswebpanel.client.backup'); ?></td><td><?php echo (isset($cwp_details['backup']) ? $this->Html->safe($cwp_details['backup']) : null); ?> </td>
+                <td><?php $this->_('Centoswebpanel.client.type'); ?></td><td><?php echo (isset($cwp_details['reseller']) ? $this->Html->safe($cwp_details['reseller']) : null); ?></td>
+                </tr>
+                <tr>
+                <td><?php $this->_('Centoswebpanel.client.package'); ?></td><td><?php echo (isset($cwp_details['package_name']) ? $this->Html->safe($cwp_details['package_name']) : null); ?> </td>
+                <td><?php $this->_('Centoswebpanel.client.ip'); ?></td><td><?php echo (isset($cwp_details['ip_address']) ? $this->Html->safe($cwp_details['ip_address']) : null); ?></td>
+                </tr>
+                <tr>
+                <td><?php $this->_('Centoswebpanel.service_info.username'); ?></td><td><?php echo (isset($cwp_details['username']) ? $this->Html->safe($cwp_details['username']) : null); ?> </td>
+                <td><?php $this->_('Centoswebpanel.service_info.password'); ?></td><td><?php echo (isset($service_fields->centoswebpanel_password) ? $this->Html->safe($service_fields->centoswebpanel_password) : null); ?></td>
+                </tr>
+                <tr>
+                <td><?php $this->_('Centoswebpanel.client.name_server'); ?></td>
+                <td colspan="3">
+                  <?php
+                  $nameServers = $module_row->meta->name_servers;
+                  if (is_array($nameServers) && !empty($nameServers)) {
+                    foreach ($nameServers as $server) {
+                        echo $server . '<br>';
+                    }
+                  }
+                   ?>
+                 </td>
+                </tr>
+
+                </table>
+              </div>
+          </div>
+  </div>
+</div>
+
+<div class="col-md-6">
+<div class="ibox">
+  <div class="ibox-title">
+      <h5><i class="fa fa-line-chart"></i> <?php echo $this->_('Centoswebpanel.client.planstatus'); ?></h5>
+  </div>
+      <div class="statistic-box ibox-content ">
+          <div class="row text-center">
+              <div class="col-lg-4">
+                  <canvas id="doughnutChart2"></canvas>
+                  <h5><?php echo $this->_('Centoswebpanel.client.mysql'); ?> <?php echo $db_used; ?> / <?php echo $db_max; ?></h5>
+              </div>
+              <div class="col-lg-4">
+                  <canvas id="doughnutChart"></canvas>
+                  <h5><?php echo $this->_('Centoswebpanel.client.email'); ?> <?php echo $email_accounts_used; ?> / <?php echo $email_accounts; ?></h5>
+              </div>
+              <div class="col-lg-4">
+                  <canvas id="doughnutChart3"></canvas>
+                  <h5><?php echo $this->_('Centoswebpanel.client.domains'); ?> <?php echo $addons_domains_used; ?> / <?php echo $addons_domains; ?></h5>
+              </div>
+              <div class="col-lg-4">
+                  <canvas id="doughnutChart5"></canvas>
+                  <h5><?php echo $this->_('Centoswebpanel.client.subdomains'); ?> <?php echo $sub_domains_used; ?> / <?php echo $sub_domains; ?></h5>
+              </div>
+              <div class="col-lg-4">
+                  <canvas id="doughnutChart4"></canvas>
+                  <h5><?php echo $this->_('Centoswebpanel.client.ftp'); ?> <?php echo $ftp_accounts_used; ?> / <?php echo $ftp_accounts; ?></h5>
+              </div>
+              <div class="col-lg-4">
+                  <canvas id="doughnutChart6"></canvas>
+                  <h5><?php echo $this->_('Centoswebpanel.client.bandwidth'); ?> <?php echo $bandwidth_used; ?> / <?php echo $bandwidth; ?> <?php echo $this->_('Centoswebpanel.client.MB'); ?></h5>
+              </div>
+          </div>
+      </div>
+</div>
+</div>
+
+</div>
+
+<div class="col-md-12">
+  <div class="ibox">
+    <div class="ibox-title">
+        <h5><i class="fa fa-line-chart"></i> <?php echo $this->_('Centoswebpanel.client.quickactions'); ?></h5>
+    </div>
+        <div class="statistic-box ibox-content">
+            <div class="row text-left">
+                <?php
+                $sessions = [
+                    'cwp_session' => [
+                        'icon' => 'cwp_session.png',
+                        'translation_key' => 'Centoswebpanel.client.cwp_session'
+                    ],
+                    'mysql_session' => [
+                        'icon' => 'mysql_session.png',
+                        'translation_key' => 'Centoswebpanel.client.mysql_session'
+                    ],
+                    'domain_session' => [
+                        'icon' => 'domain_session.png',
+                        'translation_key' => 'Centoswebpanel.client.domain_session'
+                    ]
+                ];
+
+                foreach ($sessions as $session_key => $session_info) {
+                    if (isset($cwp_details[$session_key])) {
+                        ?>
+                        <div class="col-md-3">
+                            <button class="palette-button" onClick="openSession('<?php echo $this->Html->safe($cwp_details[$session_key]); ?>')">
+                                <img src="<?php echo $this->view_dir; ?>images/icons/<?php echo $session_info['icon']; ?>">
+                                <?php echo $this->_($session_info['translation_key']); ?>
+                            </button>
+                        </div>
+                        <?php
+                    }
+                }
+                ?>
+                <div class="col-md-3">
+                  <button class="palette-button" onClick="window.open('<?php echo 'https://' . (isset($module_row->meta->host_name) ? $module_row->meta->host_name : null) . '/webmail'; ?>')">
+                    <img src="<?php echo $this->view_dir;?>images/icons/webmail.png"><?php echo $this->_('Centoswebpanel.client.webmail'); ?>
+                </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="statistic-box ibox-content">
+            <div class="row text-left">
+                <?php
+                $sessions = [
+                    'crontab_session' => [
+                        'icon' => 'crontab_session.png',
+                        'translation_key' => 'Centoswebpanel.client.crontab_session'
+                    ],
+                    'phpini_session' => [
+                        'icon' => 'phpini_session.png',
+                        'translation_key' => 'Centoswebpanel.client.phpini_session'
+                    ],
+                    'phpselector_session' => [
+                        'icon' => 'phpselector_session.png',
+                        'translation_key' => 'Centoswebpanel.client.phpselector_session'
+                    ],
+                    'notification_session' => [
+                        'icon' => 'notification_session.png',
+                        'translation_key' => 'Centoswebpanel.client.notification_session'
+                    ]
+                ];
+
+                foreach ($sessions as $session_key => $session_info) {
+                    if (isset($cwp_details[$session_key])) {
+                        ?>
+                        <div class="col-md-3">
+                            <button class="palette-button" onClick="openSession('<?php echo $this->Html->safe($cwp_details[$session_key]); ?>')">
+                                <img src="<?php echo $this->view_dir; ?>images/icons/<?php echo $session_info['icon']; ?>">
+                                <?php echo $this->_($session_info['translation_key']); ?>
+                            </button>
+                        </div>
+                        <?php
+                    }
+                }
+                ?>
+            </div>
+        </div>
+
+        <div class="statistic-box ibox-content">
+            <div class="row text-left">
+                <?php
+                $sessions = [
+                    'modsec_session' => [
+                        'icon' => 'modsec_session.png',
+                        'translation_key' => 'Centoswebpanel.client.modsec_session'
+                    ],
+                    'statistics_session' => [
+                        'icon' => 'statistics_session.png',
+                        'translation_key' => 'Centoswebpanel.client.statistics_session'
+                    ],
+                    'ftp_session' => [
+                        'icon' => 'ftp_session.png',
+                        'translation_key' => 'Centoswebpanel.client.ftp_session'
+                    ],
+                    'backups_session' => [
+                        'icon' => 'backups_session.png',
+                        'translation_key' => 'Centoswebpanel.client.backups_session'
+                    ]
+                ];
+
+                foreach ($sessions as $session_key => $session_info) {
+                    if (isset($cwp_details[$session_key])) {
+                        ?>
+                        <div class="col-md-3">
+                            <button class="palette-button" onClick="openSession('<?php echo $this->Html->safe($cwp_details[$session_key]); ?>')">
+                                <img src="<?php echo $this->view_dir; ?>images/icons/<?php echo $session_info['icon']; ?>">
+                                <?php echo $this->_($session_info['translation_key']); ?>
+                            </button>
+                        </div>
+                        <?php
+                    }
+                }
+                ?>
+            </div>
+        </div>
+
+        <div class="statistic-box ibox-content">
+            <div class="row text-left">
+                <?php
+                $sessions = [
+                    'pd_session' => [
+                        'icon' => 'pd_session.png',
+                        'translation_key' => 'Centoswebpanel.client.pd_session'
+                    ],
+                    'du_session' => [
+                        'icon' => 'du_session.png',
+                        'translation_key' => 'Centoswebpanel.client.du_session'
+                    ],
+                    'logs_session' => [
+                        'icon' => 'logs_session.png',
+                        'translation_key' => 'Centoswebpanel.client.logs_session'
+                    ],
+                    'faperm_session' => [
+                        'icon' => 'faperm_session.png',
+                        'translation_key' => 'Centoswebpanel.client.faperm_session'
+                    ]
+                ];
+
+                foreach ($sessions as $session_key => $session_info) {
+                    if (isset($cwp_details[$session_key])) {
+                        ?>
+                        <div class="col-md-3">
+                            <button class="palette-button" onClick="openSession('<?php echo $this->Html->safe($cwp_details[$session_key]); ?>')">
+                                <img src="<?php echo $this->view_dir; ?>images/icons/<?php echo $session_info['icon']; ?>">
+                                <?php echo $this->_($session_info['translation_key']); ?>
+                            </button>
+                        </div>
+                        <?php
+                    }
+                }
+                ?>
+            </div>
+        </div>
+
+        <div class="statistic-box ibox-content">
+            <div class="row text-left">
+                <?php
+                $sessions = [
+                    'clam_session' => [
+                        'icon' => 'clam_session.png',
+                        'translation_key' => 'Centoswebpanel.client.clam_session'
+                    ],
+                    'subdomains_session' => [
+                        'icon' => 'subdomains_session.png',
+                        'translation_key' => 'Centoswebpanel.client.subdomains_session'
+                    ],
+                    'ssl_session' => [
+                        'icon' => 'ssl_session.png',
+                        'translation_key' => 'Centoswebpanel.client.ssl_session'
+                    ],
+                    'redirect_session' => [
+                        'icon' => 'redirect_session.png',
+                        'translation_key' => 'Centoswebpanel.client.redirect_session'
+                    ]
+                ];
+
+                foreach ($sessions as $session_key => $session_info) {
+                    if (isset($cwp_details[$session_key])) {
+                        ?>
+                        <div class="col-md-3">
+                            <button class="palette-button" onClick="openSession('<?php echo $this->Html->safe($cwp_details[$session_key]); ?>')">
+                                <img src="<?php echo $this->view_dir; ?>images/icons/<?php echo $session_info['icon']; ?>">
+                                <?php echo $this->_($session_info['translation_key']); ?>
+                            </button>
+                        </div>
+                        <?php
+                    }
+                }
+                ?>
+            </div>
+        </div>
+
+        <div class="statistic-box ibox-content">
+            <div class="row text-left">
+                <?php
+                $sessions = [
+                    'eacc_session' => [
+                        'icon' => 'email.png',
+                        'translation_key' => 'Centoswebpanel.client.eacc_session'
+                    ],
+                    'eforwarder_session' => [
+                        'icon' => 'email.png',
+                        'translation_key' => 'Centoswebpanel.client.eforwarder_session'
+                    ],
+                    'eautoreply_session' => [
+                        'icon' => 'email.png',
+                        'translation_key' => 'Centoswebpanel.client.eautoreply_session'
+                    ],
+                    'efilters_session' => [
+                        'icon' => 'email.png',
+                        'translation_key' => 'Centoswebpanel.client.efilters_session'
+                    ]
+                ];
+
+                foreach ($sessions as $session_key => $session_info) {
+                    if (isset($cwp_details[$session_key])) {
+                        ?>
+                        <div class="col-md-3">
+                            <button class="palette-button" onClick="openSession('<?php echo $this->Html->safe($cwp_details[$session_key]); ?>')">
+                                <img src="<?php echo $this->view_dir; ?>images/icons/<?php echo $session_info['icon']; ?>">
+                                <?php echo $this->_($session_info['translation_key']); ?>
+                            </button>
+                        </div>
+                        <?php
+                    }
+                }
+                ?>
+            </div>
+        </div>
+
+        <div class="statistic-box ibox-content">
+            <div class="row text-left">
+                <?php
+                $sessions = [
+                    'erouting_session' => [
+                        'icon' => 'email.png',
+                        'translation_key' => 'Centoswebpanel.client.erouting_session'
+                    ],
+                    'eimporter_session' => [
+                        'icon' => 'email.png',
+                        'translation_key' => 'Centoswebpanel.client.eimporter_session'
+                    ],
+                    'dns_session' => [
+                        'icon' => 'dns_session.png',
+                        'translation_key' => 'Centoswebpanel.client.dns_session'
+                    ],
+                    'script_session' => [
+                        'icon' => 'script_session.png',
+                        'translation_key' => 'Centoswebpanel.client.script_session'
+                    ]
+                ];
+
+                foreach ($sessions as $session_key => $session_info) {
+                    if (isset($cwp_details[$session_key])) {
+                        ?>
+                        <div class="col-md-3">
+                            <button class="palette-button" onClick="openSession('<?php echo $this->Html->safe($cwp_details[$session_key]); ?>')">
+                                <img src="<?php echo $this->view_dir; ?>images/icons/<?php echo $session_info['icon']; ?>">
+                                <?php echo $this->_($session_info['translation_key']); ?>
+                            </button>
+                        </div>
+                        <?php
+                    }
+                }
+                ?>
+            </div>
+        </div>
+
+  </div>
+</div>
+
+  <script>
+  function openSession(url) {
+      if (url) {
+          window.open(url);
+      }
+  }
+miniGraph({used: <?php echo $db_used; ?>, limit: <?php echo $db_max; ?>, label1: '<?php echo $this->_('Centoswebpanel.client.used'); ?>', label2: '<?php echo $this->_('Centoswebpanel.client.available'); ?>', selector: 'doughnutChart'});
+miniGraph({used: <?php echo $email_accounts_used; ?>, limit: <?php echo $email_accounts; ?>, label1: '<?php echo $this->_('Centoswebpanel.client.used'); ?>', label2: '<?php echo $this->_('Centoswebpanel.client.available'); ?>', selector: 'doughnutChart2'});
+miniGraph({used: <?php echo $addons_domains_used; ?>, limit: <?php echo $addons_domains; ?>, label1: '<?php echo $this->_('Centoswebpanel.client.used'); ?>', label2: '<?php echo $this->_('Centoswebpanel.client.available'); ?>', selector: 'doughnutChart3'});
+miniGraph({used: <?php echo $sub_domains_used; ?>, limit: <?php echo $sub_domains; ?>, label1: '<?php echo $this->_('Centoswebpanel.client.used'); ?>', label2: '<?php echo $this->_('Centoswebpanel.client.available'); ?>', selector: 'doughnutChart4'});
+miniGraph({used: <?php echo $ftp_accounts_used; ?>, limit: <?php echo $ftp_accounts; ?>, label1: '<?php echo $this->_('Centoswebpanel.client.used'); ?>', label2: '<?php echo $this->_('Centoswebpanel.client.available'); ?>', selector: 'doughnutChart5'});
+miniGraph({used: <?php echo $bandwidth_used; ?>, limit: <?php echo $bandwidth; ?>, label1: '<?php echo $this->_('Centoswebpanel.client.used'); ?>', label2: '<?php echo $this->_('Centoswebpanel.client.available'); ?>', selector: 'doughnutChart6'});
+function miniGraph(settings) {
+    let gf2a = settings.used;
+    let gf2b = settings.limit;
+    let dispemail = (gf2b == -1) ? 100 : (gf2b == 0 ? 0 : Math.round((100 / gf2b) * (gf2b - gf2a)));
+    let consemail = Math.round(100 - dispemail);
+    let classbar = '#23c6c8';
+
+    if (consemail >= 26 && consemail <= 50) {
+        classbar = '#1ab394';
+    } else if (consemail >= 51 && consemail <= 75) {
+        classbar = '#f8ac59';
+    } else if (consemail > 75) {
+        classbar = '#ed5565';
+    }
+
+    let doughnutData = {
+        labels: [settings.label1, settings.label2],
+        datasets: [{
+            data: [Math.round(consemail), Math.round(dispemail)],
+            backgroundColor: [classbar, "#dedede"]
+        }]
+    };
+
+    var doughnutOptions = {
+        responsive: false,
+        legend: {
+            display: false
+        },
+        tooltips: {
+            callbacks: {
+                label: function(tooltipItem, data) {
+                    var label = data.labels[tooltipItem.index] + ': ' + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index] + '%';
+                    return label;
+                }
+            }
+        }
+    };
+
+    var emailg = document.getElementById(settings.selector).getContext("2d");
+    new Chart(emailg, {
+        type: 'doughnut',
+        data: doughnutData,
+        options: doughnutOptions
+    });
+}
+
+  </script>

@@ -1,0 +1,112 @@
+.ibox {
+    border: 1px solid #e7eaec;
+    margin-bottom: 25px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+
+.ibox-title {
+    background-color: #f3f3f4;
+    color: #4e5365;
+    padding: 10px;
+    border-bottom: 1px solid #e7eaec;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.ibox-title h5 {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.ibox-content {
+    padding: 15px;
+}
+
+.graph-stats-wrapper {
+    margin-top: 10px;
+}
+
+.statistic-box {
+    padding: 15px;
+    background-color: #ffffff;
+    border: 1px solid #e7eaec;
+    border-radius: 5px;
+}
+
+.row.text-center {
+    margin-top: 0;
+}
+
+.col-lg-4 {
+    margin-bottom: 20px;
+}
+
+canvas {
+    margin: 0 auto;
+    display: block;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #f8f8f8; /* fallback for older browsers */
+}
+
+h5 {
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 0;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/*button*/
+.palette-button {
+  background-color: #fff;
+  width: 170px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0px 0px 10px rgb(196, 196, 196);
+  transition: all 0.3s;
+}
+.palette {
+  width: 30px;
+  transition: all 0.3s;
+}
+.palette-button:hover .palette {
+  transform: rotate(-45deg);
+}
+.palette path {
+  fill: rgb(255, 163, 183);
+  stroke-width: 0;
+}
+.drop1 {
+  fill: rgb(115, 115, 255);
+  stroke-width: 0;
+}
+.drop2 {
+  fill: red;
+  stroke-width: 0;
+}
+.drop3 {
+  fill: yellow;
+  stroke-width: 0;
+}
+.drop4 {
+  fill: rgb(104, 255, 255);
+  stroke-width: 0;
+}
+.palette-button:hover {
+  transform: scale(1.05);
+  background-color: rgb(176, 115, 255);
+  color: white;
+}

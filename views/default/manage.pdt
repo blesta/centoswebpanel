@@ -22,7 +22,8 @@
                 <td><span><?php $this->_('Centoswebpanel.manage.module_rows_heading.name'); ?></span></td>
                 <td><span><?php $this->_('Centoswebpanel.manage.module_rows_heading.hostname'); ?></span></td>
                 <td><span><?php $this->_('Centoswebpanel.manage.module_rows_heading.accounts'); ?></span></td>
-                <td class="last"><span><?php $this->_('Centoswebpanel.manage.module_rows_heading.options'); ?></span></td>
+                <td><span><?php $this->_('Centoswebpanel.manage.module_rows_heading.options'); ?></span></td>
+                <td class="last"><span><?php $this->_('Centoswebpanel.client.cwp_session'); ?></span></td>
             </tr>
             <?php
             for ($i = 0; $i < $num_rows; $i++) {
@@ -31,7 +32,7 @@
                 <td><?php echo (isset($module->rows[$i]->meta->server_name) ? $this->Html->safe($module->rows[$i]->meta->server_name) : null); ?></td>
                 <td><?php echo (isset($module->rows[$i]->meta->host_name) ? $this->Html->safe($module->rows[$i]->meta->host_name) : null); ?></td>
                 <td><?php $this->_('Centoswebpanel.manage.module_rows.count', false, (isset($module->rows[$i]->meta->account_count) ? $module->rows[$i]->meta->account_count : 0), ((isset($module->rows[$i]->meta->account_limit) ? $module->rows[$i]->meta->account_limit : null) == '' ? '∞' : $module->rows[$i]->meta->account_limit)); ?></td>
-                <td class="last">
+                  <td>
                     <a href="<?php echo $this->Html->safe($this->base_uri . 'settings/company/modules/editrow/' . (isset($module->id) ? $module->id : null) . '/' . (isset($module->rows[$i]->id) ? $module->rows[$i]->id : null) . '/'); ?>"><?php $this->_('Centoswebpanel.manage.module_rows.edit'); ?></a>
                     <?php
                     $this->Form->create($this->base_uri . 'settings/company/modules/deleterow/');
@@ -41,6 +42,18 @@
                     <?php
                     $this->Form->end(); ?>
                 </td>
+                <td class="last">
+                <?php
+                    $this->Form->create($this->Html->safe('https://' . (isset($module->rows[$i]->meta->host_name) ? $module->rows[$i]->meta->host_name : null) . ':2031/login/index.php'), ['target' => '_blank']);
+                    $this->Form->fieldHidden('username', 'root');
+                    $this->Form->fieldHidden('password', (isset($module->rows[$i]->meta->server_pass) ? $module->rows[$i]->meta->server_pass : null));
+                    $this->Form->fieldHidden('commit', 'Login');
+                ?>
+                <a id="centoswebpanel_login<?php echo (isset($module->id) ? $this->Html->safe($module->id) : null); ?>" href="#" class="btn btn-default pull-center btn-sm"><?php $this->_('Centoswebpanel.client.logn'); ?></a>
+                <?php
+                    $this->Form->end();
+                ?>
+            </td>
             </tr>
             <?php
             } ?>
@@ -106,6 +119,11 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+      $('#centoswebpanel_login<?php echo (isset($module->id) ? $this->Html->safe($module->id) : null); ?>').click(function(e) {
+                e.preventDefault();
+
+                $(this).closest('form').submit();
+            });
         $('#manage_centoswebpanel a.manage[rel]').blestaModalConfirm({base_url: '<?php echo $this->base_uri; ?>', close: '<?php $this->_('AppController.modal.text_close'); ?>', submit: true});
     });
 </script>

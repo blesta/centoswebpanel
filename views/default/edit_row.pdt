@@ -27,6 +27,18 @@
                     </li>
                     <li>
                         <?php
+                        $this->Form->label($this->_('Centoswebpanel.row_meta.server_ip', true), 'server_ip');
+                        $this->Form->fieldText('server_ip', (isset($vars->server_ip) ? $vars->server_ip : null));
+                        ?>
+                    </li>
+                    <li>
+                        <?php
+                        $this->Form->label($this->_('Centoswebpanel.row_meta.server_pass', true), 'server_pass');
+                        $this->Form->fieldText('server_pass', (isset($vars->server_pass) ? $vars->server_pass : null));
+                        ?>
+                    </li>
+                    <li>
+                        <?php
                         $this->Form->label($this->_('Centoswebpanel.row_meta.login_port', true), 'login_port');
                         $this->Form->fieldText('login_port', (isset($vars->login_port) ? $vars->login_port : $this->_('Centoswebpanel.row_meta.default_login_port', true)));
                         ?>
