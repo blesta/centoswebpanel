@@ -49,7 +49,7 @@
                     $this->Form->fieldHidden('password', (isset($module->rows[$i]->meta->server_pass) ? $module->rows[$i]->meta->server_pass : null));
                     $this->Form->fieldHidden('commit', 'Login');
                 ?>
-                <a id="centoswebpanel_login<?php echo (isset($module->id) ? $this->Html->safe($module->id) : null); ?>" href="#" class="btn btn-default pull-center btn-sm"><?php $this->_('Centoswebpanel.client.logn'); ?></a>
+                <a id="centoswebpanel_login<?php echo (isset($i) ? $this->Html->safe($i) : null); ?>" href="#" class="btn btn-default pull-center btn-sm"><?php $this->_('Centoswebpanel.client.logn'); ?></a>
                 <?php
                     $this->Form->end();
                 ?>
@@ -119,11 +119,20 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-      $('#centoswebpanel_login<?php echo (isset($module->id) ? $this->Html->safe($module->id) : null); ?>').click(function(e) {
-                e.preventDefault();
+<?php
+$num_rows_data = count((isset($module->rows) ? $module->rows : []));
+if ($num_rows_data > 0) {
+  for ($i = 0; $i < $num_rows_data; $i++) {
+    ?>
+    $('#centoswebpanel_login<?php echo (isset($i) ? $this->Html->safe($i) : null); ?>').click(function(e) {
+              e.preventDefault();
+              $(this).closest('form').submit();
+          });
+  <?php
+  }
+}
+ ?>
 
-                $(this).closest('form').submit();
-            });
         $('#manage_centoswebpanel a.manage[rel]').blestaModalConfirm({base_url: '<?php echo $this->base_uri; ?>', close: '<?php $this->_('AppController.modal.text_close'); ?>', submit: true});
     });
 </script>

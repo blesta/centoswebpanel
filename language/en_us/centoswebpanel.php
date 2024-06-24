@@ -180,3 +180,4 @@ $lang['Centoswebpanel.client.erouting_session'] = 'Email Routing';
 $lang['Centoswebpanel.client.eimporter_session'] = 'Email Importer';
 $lang['Centoswebpanel.client.dns_session'] = 'DNS Editing';
 $lang['Centoswebpanel.client.script_session'] = 'Script Installed';
+$lang['Centoswebpanel.client.emailactions'] = 'Email Actions';

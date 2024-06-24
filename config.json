@@ -25,7 +25,7 @@
         "group": "Centoswebpanel.module_group"
     },
     "email_tags": {
-        "module": ["host_name", "name_servers"],
+        "module": ["host_name", "name_servers", "server_ip"],
         "package": ["package"],
         "service": ["centoswebpanel_domain", "centoswebpanel_username", "centoswebpanel_password"]
     }

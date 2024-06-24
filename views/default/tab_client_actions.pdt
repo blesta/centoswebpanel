@@ -19,8 +19,8 @@ $space_usage = $account_info->account_info->space_usage;
 $space_disk = $account_info->account_info->space_disk;
 ?>
 
-<div class="row">
-    <div class="col-md-6">
+
+    <div class="col-md-12">
     <div class="ibox">
       <div class="ibox-title">
           <h5><i class="fa fa-globe"></i> <?php echo $this->_('Centoswebpanel.client.domaininfo'); ?></h5>
@@ -64,7 +64,7 @@ $space_disk = $account_info->account_info->space_disk;
   </div>
 </div>
 
-<div class="col-md-6">
+<div class="col-md-12">
 <div class="ibox">
   <div class="ibox-title">
       <h5><i class="fa fa-line-chart"></i> <?php echo $this->_('Centoswebpanel.client.planstatus'); ?></h5>
@@ -100,7 +100,7 @@ $space_disk = $account_info->account_info->space_disk;
 </div>
 </div>
 
-</div>
+
 
 <div class="col-md-12">
   <div class="ibox">
@@ -307,15 +307,15 @@ $space_disk = $account_info->account_info->space_disk;
                         'translation_key' => 'Centoswebpanel.client.eacc_session'
                     ],
                     'eforwarder_session' => [
-                        'icon' => 'email.png',
+                        'icon' => 'email-forwarders.png',
                         'translation_key' => 'Centoswebpanel.client.eforwarder_session'
                     ],
                     'eautoreply_session' => [
-                        'icon' => 'email.png',
+                        'icon' => 'email-auto-reply.png',
                         'translation_key' => 'Centoswebpanel.client.eautoreply_session'
                     ],
                     'efilters_session' => [
-                        'icon' => 'email.png',
+                        'icon' => 'email-filters.png',
                         'translation_key' => 'Centoswebpanel.client.efilters_session'
                     ]
                 ];
@@ -341,11 +341,11 @@ $space_disk = $account_info->account_info->space_disk;
                 <?php
                 $sessions = [
                     'erouting_session' => [
-                        'icon' => 'email.png',
+                        'icon' => 'email-routing.png',
                         'translation_key' => 'Centoswebpanel.client.erouting_session'
                     ],
                     'eimporter_session' => [
-                        'icon' => 'email.png',
+                        'icon' => 'email-importer.png',
                         'translation_key' => 'Centoswebpanel.client.eimporter_session'
                     ],
                     'dns_session' => [
