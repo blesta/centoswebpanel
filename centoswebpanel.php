@@ -102,16 +102,98 @@ class Centoswebpanel extends Module
 
         $fields = new ModuleFields();
 
+        $fields->setHtml("
+        <script type=\"text/javascript\">
+        $(document).ready(function() {
+
+    updateVisibility();
+
+    function updateVisibility() {
+        var packageValue = $('#centoswebpanel_package').val();
+        if (packageValue == 'custom') {
+            $('#centoswebpanel_maxhouremail').closest('li').show();
+            $('#centoswebpanel_autossl').closest('li').show();
+            $('#centoswebpanel_resellerpack').closest('li').show();
+            if ($('#centoswebpanel_resellerpack').val() == 'yes') {
+                $('#centoswebpanel_reselleraccount').closest('li').show();
+            } else {
+                $('#centoswebpanel_reselleraccount').closest('li').hide();
+            }
+        } else {
+            $('#centoswebpanel_maxhouremail').closest('li').hide();
+            $('#centoswebpanel_autossl').closest('li').hide();
+            $('#centoswebpanel_resellerpack').closest('li').hide();
+            $('#centoswebpanel_reselleraccount').closest('li').hide();
+        }
+    }
+
+    $('#centoswebpanel_package').change(function() {
+        updateVisibility();
+    });
+
+    $('#centoswebpanel_resellerpack').change(function() {
+        if ($(this).val() == 'yes') {
+            $('#centoswebpanel_reselleraccount').closest('li').show();
+        } else {
+            $('#centoswebpanel_reselleraccount').closest('li').hide();
+        }
+    });
+});
+</script>
+
+        ");
+
+        // Fetch the 1st account from the list of accounts 2.6.1
+        $module_row = null;
+        $rows = $this->getModuleRows();
+
+        if (isset($rows[0])) {
+            $module_row = $rows[0];
+        }
+        unset($rows);
+
+        // Fetch all the plans available for the different server types
+        $packageNames = [];
+
+        if ($module_row) {
+          $api = $this->getApi($module_row->meta->host_name, $module_row->meta->port, $module_row->meta->api_key, $module_row->meta->use_ssl);
+          $response = $api->getPackages();
+          $responseData = $response->response();
+          $this->log($module_row->meta->host_name . '|getPackageFields', $response->raw(), 'output', 'true');
+          if($responseData->status == "OK"){
+            $packageNames['custom'] = Language::_('Centoswebpanel.package_fields.custom', true);
+            foreach ($responseData->msj as $key => $package) {
+                $packageNames[$package->id] = ucfirst($package->package_name);
+            }
+          }
+        }
+
+
         // Create package label
         $package = $fields->label(Language::_('Centoswebpanel.package_fields.package', true), 'centoswebpanel_package');
         // Create package field and attach to package label
-        $package->attach(
-            $fields->fieldText(
-                'meta[package]',
-                (isset($vars->meta['package']) ? $vars->meta['package'] : null),
-                ['id' => 'centoswebpanel_package']
-            )
-        );
+
+        if(is_array($packageNames)){
+          $package->attach(
+              $fields->fieldSelect(
+                  'meta[package]',
+                  $packageNames,
+                  (isset($vars->meta['package']) ? $vars->meta['package'] : null),
+                  ['id' => 'centoswebpanel_package']
+              )
+          );
+        } else {
+          $package->attach(
+              $fields->fieldText(
+                  'meta[package]',
+                  (isset($vars->meta['package']) ? $vars->meta['package'] : null),
+                  ['id' => 'centoswebpanel_package']
+              )
+          );
+        }
+        $yesNo['no'] = Language::_('Centoswebpanel.package_fields.no', true);
+        $yesNo['yes'] = Language::_('Centoswebpanel.package_fields.yes', true);
+
         // Set the label as a field
         $fields->setField($package);
 
@@ -121,7 +203,7 @@ class Centoswebpanel extends Module
         $inode->attach(
             $fields->fieldText(
                 'meta[inode]',
-                (isset($vars->meta['inode']) ? $vars->meta['inode'] : null),
+                (isset($vars->meta['inode']) ? $vars->meta['inode'] : 0), //null
                 ['id' => 'centoswebpanel_inode']
             )
         );
@@ -134,7 +216,7 @@ class Centoswebpanel extends Module
         $nofile->attach(
             $fields->fieldText(
                 'meta[nofile]',
-                (isset($vars->meta['nofile']) ? $vars->meta['nofile'] : null),
+                (isset($vars->meta['nofile']) ? $vars->meta['nofile'] : 150),
                 ['id' => 'centoswebpanel_nofile']
             )
         );
@@ -147,12 +229,68 @@ class Centoswebpanel extends Module
         $nproc->attach(
             $fields->fieldText(
                 'meta[nproc]',
-                (isset($vars->meta['nproc']) ? $vars->meta['nproc'] : null),
+                (isset($vars->meta['nproc']) ? $vars->meta['nproc'] : 40),
                 ['id' => 'centoswebpanel_nproc']
             )
         );
         // Set the label as a field
         $fields->setField($nproc);
+
+        //2.6.1
+        // Create maxhouremail label
+        $maxhouremail = $fields->label(Language::_('Centoswebpanel.package_fields.maxhouremail', true), 'centoswebpanel_maxhouremail');
+        // Create maxhouremail field and attach to maxhouremail label
+        $maxhouremail->attach(
+            $fields->fieldText(
+                'meta[maxhouremail]',
+                (isset($vars->meta['maxhouremail']) ? $vars->meta['maxhouremail'] : 100),
+                ['id' => 'centoswebpanel_maxhouremail']
+            )
+        );
+        // Set the label as a field
+        $fields->setField($maxhouremail);
+
+        // Create Autossl label
+        $autossl = $fields->label(Language::_('Centoswebpanel.package_fields.autossl', true), 'centoswebpanel_autossl');
+        // Create Autossl field and attach to Autossl label
+        $autossl->attach(
+            $fields->fieldSelect(
+                'meta[autossl]',
+                $yesNo,
+                (isset($vars->meta['autossl']) ? $vars->meta['autossl'] : 'yes'),
+                ['id' => 'centoswebpanel_autossl']
+            )
+        );
+        // Set the label as a field
+        $fields->setField($autossl);
+
+        // Create resellerpack label
+        $resellerpack = $fields->label(Language::_('Centoswebpanel.package_fields.resellerpack', true), 'centoswebpanel_resellerpack');
+        // Create resellerpack field and attach to resellerpack label
+        $resellerpack->attach(
+            $fields->fieldSelect(
+                'meta[resellerpack]',
+                $yesNo,
+                (isset($vars->meta['resellerpack']) ? $vars->meta['resellerpack'] : null),
+                ['id' => 'centoswebpanel_resellerpack']
+            )
+        );
+        // Set the label as a field
+        $fields->setField($resellerpack);
+
+        // Create reselleraccount label
+        $reselleraccount = $fields->label(Language::_('Centoswebpanel.package_fields.reselleraccount', true), 'centoswebpanel_reselleraccount');
+        // Create reselleraccount field and attach to reselleraccount label
+        $reselleraccount->attach(
+            $fields->fieldText(
+                'meta[reselleraccount]',
+                (isset($vars->meta['reselleraccount']) ? $vars->meta['reselleraccount'] : null),
+                ['id' => 'centoswebpanel_reselleraccount']
+            )
+        );
+        // Set the label as a field
+        $fields->setField($reselleraccount);
+        //2.6.1
 
         return $fields;
     }
@@ -323,11 +461,12 @@ class Centoswebpanel extends Module
      *  - value The value for this key
      *  - encrypted Whether or not this field should be encrypted (default 0, not encrypted)
      */
+     //2.6.1
     public function addModuleRow(array &$vars)
     {
         $meta_fields = ['server_name', 'host_name', 'login_port', 'port', 'api_key',
-            'use_ssl', 'account_limit', 'name_servers', 'notes'];
-        $encrypted_fields = ['api_key'];
+            'use_ssl', 'account_limit', 'name_servers', 'notes', 'server_ip', 'server_pass'];
+        $encrypted_fields = ['api_key', 'server_pass'];
 
         // Set unspecified checkboxes
         if (empty($vars['use_ssl'])) {
@@ -366,11 +505,12 @@ class Centoswebpanel extends Module
      *  - value The value for this key
      *  - encrypted Whether or not this field should be encrypted (default 0, not encrypted)
      */
+     //2.6.1
     public function editModuleRow($module_row, array &$vars)
     {
         $meta_fields = ['server_name', 'host_name', 'login_port', 'port', 'api_key',
-            'use_ssl', 'account_limit', 'account_count', 'name_servers', 'notes'];
-        $encrypted_fields = ['api_key'];
+            'use_ssl', 'account_limit', 'account_count', 'name_servers', 'notes', 'server_ip', 'server_pass'];
+        $encrypted_fields = ['api_key', 'server_pass'];
 
         // Set unspecified checkboxes
         if (empty($vars['use_ssl'])) {
@@ -699,8 +839,8 @@ class Centoswebpanel extends Module
             }
         }
 
-        $params = $this->getFieldsFromInput((array) $vars, $package);
-        $params['server_ips'] = $row->meta->host_name;
+        $getparams = $this->getFieldsFromInput((array) $vars, $package);
+        //2.6.1
 
         $this->validateService($package, $vars);
 
@@ -710,6 +850,30 @@ class Centoswebpanel extends Module
 
         // Only provision the service if 'use_module' is true
         if ($vars['use_module'] == 'true') {
+          //Create Package of Custom Plans Selected
+          if($package->meta->package == 'custom'){
+            $packageadd = $api->createPackage($getparams['custom']);
+            $this->log($row->meta->host_name . '|package_new_custom', serialize($getparams['custom']), 'input', true);
+            $this->log($row->meta->host_name . '|package_new_custom', $packageadd->raw(), 'output', true);
+
+            $getallackages = $api->getPackages();
+            $responseData = $getallackages->response();
+            $this->log($row->meta->host_name . '|getPackageFieldsCustom', $getallackages->raw(), 'output', 'true');
+            if($responseData->status == "OK"){
+              foreach ($responseData->msj as $key => $rpackage) {
+                if($rpackage->package_name === $getparams['custom']['package_name']){
+                  $this->log($row->meta->host_name . '|foreach-match', serialize($rpackage->package_name), 'output', true);
+                  $packageid = $rpackage->id;
+                  break;
+                }
+              }
+            }
+          }
+          $params = $getparams['default'];
+          $params['package'] = ($package->meta->package == 'custom') ? $packageid : $package->meta->package;
+          $params['server_ips'] = $row->meta->server_ip ?? $row->meta->host_name;
+
+
             // Create CentOS WebPanel account
             $masked_params = $params;
             $masked_params['pass'] = '***';
@@ -739,6 +903,11 @@ class Centoswebpanel extends Module
             [
                 'key' => 'centoswebpanel_domain',
                 'value' => $vars['centoswebpanel_domain'],
+                'encrypted' => 0
+            ],
+            [
+                'key' => 'centoswebpanel_email',
+                'value' => $vars['centoswebpanel_email'],
                 'encrypted' => 0
             ],
             [
@@ -777,22 +946,8 @@ class Centoswebpanel extends Module
         $row = $this->getModuleRow();
         $api = $this->getApi($row->meta->host_name, $row->meta->port, $row->meta->api_key, $row->meta->use_ssl);
 
-        $params = $this->getFieldsFromInput((array) $vars, $package, true);
+        $getparams = $this->getFieldsFromInput((array) $vars, $package, true);
         $service_fields = $this->serviceFieldsToObject($service->fields);
-        $params['server_ips'] = $row->meta->host_name;
-
-        // Default fields using service fields
-        if (!isset($params['domain'])) {
-            $params['domain'] = $service_fields->centoswebpanel_domain;
-        }
-
-        if (!isset($params['pass'])) {
-            $params['pass'] = $service_fields->centoswebpanel_password;
-        }
-
-        if (!isset($params['user'])) {
-            $params['user'] = $service_fields->centoswebpanel_username;
-        }
 
         $this->validateService($package, $vars, true);
 
@@ -800,18 +955,51 @@ class Centoswebpanel extends Module
             return;
         }
 
-        if (isset($params['domain'])) {
-            // Force domain to lower case
-            $params['domain'] = strtolower($params['domain']);
-        }
-
-        // Remove password if not being updated
-        if (isset($params['pass']) && $params['pass'] == '') {
-            unset($params['pass']);
-        }
+        //2.6.1
 
         // Only update the service if 'use_module' is true
         if ($vars['use_module'] == 'true') {
+            //Update Package of Custom Plans Selected
+          if($package->meta->package == 'custom'){
+            //unset reseller and accounts as not required for update
+            unset($getparams['custom']['reseller']);
+            unset($getparams['custom']['accounts']);
+            $packageupd = $api->updateCustomPackage($getparams['custom']);
+            $this->log($row->meta->host_name . '|package_update_custom', serialize($getparams['custom']), 'input', true);
+            $this->log($row->meta->host_name . '|package_update_custom', $packageupd->raw(), 'output', true);
+
+            $getallackages = $api->getPackages();
+            $responseData = $getallackages->response();
+            $this->log($row->meta->host_name . '|getPackageUpdateCustom', $getallackages->raw(), 'output', 'true');
+            if($responseData->status == "OK"){
+              foreach ($responseData->msj as $key => $rpackage) {
+                if($rpackage->package_name === $getparams['custom']['package_name']){
+                  $this->log($row->meta->host_name . '|foreach-update-match', serialize($rpackage->package_name), 'output', true);
+                  $packageid = $rpackage->id;
+                  break;
+                }
+              }
+            }
+          }
+
+          $params = $getparams['default'];
+          $params['server_ips'] = $row->meta->server_ip ?? $row->meta->host_name;
+          $params['user'] = $service_fields->centoswebpanel_username;
+          $params['email'] = $service_fields->centoswebpanel_email;
+
+          unset($params['pass']);
+          unset($params['domain']);
+
+          if (!isset($params['processes'])) {
+              $params['processes'] = $package->meta->nproc;
+          }
+
+          if (!isset($params['openfiles'])) {
+              $params['openfiles'] = $package->meta->nofile;
+          }
+
+          $params['package'] = ($package->meta->package == 'custom') ? $packageid : $package->meta->package;
+
             // Update CentOS WebPanel account
             $masked_params = $params;
             $masked_params['pass'] = '***';
@@ -833,15 +1021,15 @@ class Centoswebpanel extends Module
                 return;
             }
 
-            // Attempt account password change
-            $password_params = ['user' => $params['user'], 'pass' => $params['pass']];
+          //  Attempt account password change
+            $password_params = ['user' => $params['user'], 'pass' => $service_fields->centoswebpanel_password];
             $this->log($host_name . '|account_changepass', serialize($password_params), 'input', true);
             $password_response = $api->updatePassword($password_params);
             $password_errors = $password_response->errors();
             $password_success = $password_response->status() == 200 && empty($password_errors);
             $this->log($host_name . '|account_changepass', $password_response->raw(), 'output', $password_success);
 
-            // Attempt account package change (this seems to have no effect)
+            // // Attempt account package change (this seems to have no effect)
             $package_params = ['user' => $params['user'], 'package' => $params['package']];
             $this->log($host_name . '|account_changepack', serialize($package_params), 'input', true);
             $package_response = $api->updatePackage($package_params);
@@ -1011,6 +1199,22 @@ class Centoswebpanel extends Module
             $success = $user_response->status() == 200 && empty($errors);
             $this->log($row->meta->host_name . '|account_remove', $user_response->raw(), 'output', $success);
 
+
+              $domainname = $service_fields->centoswebpanel_domain;
+              $getallackages = $api->getPackages();
+              $responsepackage = $getallackages->response();
+              if($responsepackage->status == "OK"){
+                foreach ($responsepackage->msj as $key => $rpackage) {
+                  if($rpackage->package_name === $domainname){
+                    $packageid = $rpackage->id;
+                    break;
+                  }
+                }
+              }
+              $user_response = $api->deleteCustomPackage(['package_name' => $rpackage->package_name, 'id' => $packageid]);
+              $this->log($row->meta->host_name . '|account_package_remove', $user_response->raw(), 'output', $success);
+
+
             if (!$success) {
                 $this->Input->setErrors([
                     'account' => [
@@ -1071,6 +1275,20 @@ class Centoswebpanel extends Module
         $this->view = new View('admin_service_info', 'default');
         $this->view->base_uri = $this->base_uri;
         $this->view->setDefaultView('components' . DS . 'modules' . DS . 'centoswebpanel' . DS);
+        //2.6.1
+        $api = $this->getApi($row->meta->host_name, $row->meta->port, $row->meta->api_key, $row->meta->use_ssl);
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+        $params['user'] = $service_fields->centoswebpanel_username;
+        $params['timer'] = 5;
+        $LoginSession = $api->userSession($params);
+        $sessionResponse = $LoginSession->response();
+
+        foreach ($sessionResponse->msj->details as $key => $sessionurl) {
+          $urlsession = $sessionurl->url;
+          break;
+        }
+
+        $this->log($row->meta->host_name . '|login_session', $LoginSession->raw(), 'output', true);
 
         // Load the helpers required for this view
         Loader::loadHelpers($this, ['Form', 'Html']);
@@ -1078,8 +1296,9 @@ class Centoswebpanel extends Module
         $this->view->set('module_row', $row);
         $this->view->set('package', $package);
         $this->view->set('service', $service);
-        $this->view->set('service_fields', $this->serviceFieldsToObject($service->fields));
-
+        $this->view->set('service_fields', $service_fields);
+        $this->view->set('session_url', $urlsession);
+        //2.6.1
         return $this->view->fetch();
     }
 
@@ -1099,6 +1318,20 @@ class Centoswebpanel extends Module
         $this->view = new View('client_service_info', 'default');
         $this->view->base_uri = $this->base_uri;
         $this->view->setDefaultView('components' . DS . 'modules' . DS . 'centoswebpanel' . DS);
+        //2.6.1
+        $api = $this->getApi($row->meta->host_name, $row->meta->port, $row->meta->api_key, $row->meta->use_ssl);
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+        $params['user'] = $service_fields->centoswebpanel_username;
+        $params['timer'] = 5;
+        $LoginSession = $api->userSession($params);
+        $sessionResponse = $LoginSession->response();
+
+        foreach ($sessionResponse->msj->details as $key => $sessionurl) {
+          $urlsession = $sessionurl->url;
+          break;
+        }
+
+        $this->log($row->meta->host_name . '|login_session', $LoginSession->raw(), 'output', true);
 
         // Load the helpers required for this view
         Loader::loadHelpers($this, ['Form', 'Html']);
@@ -1106,8 +1339,9 @@ class Centoswebpanel extends Module
         $this->view->set('module_row', $row);
         $this->view->set('package', $package);
         $this->view->set('service', $service);
-        $this->view->set('service_fields', $this->serviceFieldsToObject($service->fields));
-
+        $this->view->set('service_fields', $service_fields);
+        $this->view->set('session_url', $urlsession);
+        //2.6.1
         return $this->view->fetch();
     }
 
@@ -1207,11 +1441,86 @@ class Centoswebpanel extends Module
                 true
             );
             $response = $api->getPackages();
-
             $errors = $response->errors();
             $success = $response->status() == 200 && empty($errors);
+
             $this->log($hostname . '|validate_connection/packages_get', $response->raw(), 'output', $success);
             if ($success) {
+              //2.6.1
+              if (!isset($this->Record)) {
+      Loader::loadComponents($this, ['Record']);
+
+      // Check if the option group exists
+      $isgroup = $this->Record->select('id')
+                              ->from("package_option_groups")
+                              ->where("name", "=", 'CWP Custom Hosting')
+                              ->fetch();
+
+      if (!isset($isgroup->id)) {
+          // Insert the option group if it doesn't exist
+          $this->Record->insert("package_option_groups", [
+              'company_id' => 1,
+              'name' => "CWP Custom Hosting",
+              'hide_options' => 1
+          ]);
+
+          // Get the ID of the inserted option group
+          $groupId = $this->Record->lastInsertId();
+
+          // Define package options to insert
+          $packageOptions = [
+              ['label' => "Bandwidth Usage", 'name' => 'cwp_bandwidth_usage'],
+              ['label' => "Disk Space", 'name' => 'cwp_disk_space'],
+              ['label' => "FTP Accounts", 'name' => 'cwp_ftp_accounts'],
+              ['label' => "Email Accounts", 'name' => 'cwp_email_accounts'],
+              ['label' => "Email Lists", 'name' => 'cwp_email_lists'],
+              ['label' => "Database", 'name' => 'cwp_database'],
+              ['label' => "Sub Domains", 'name' => 'cwp_sub_domains'],
+              ['label' => "Parked Domains", 'name' => 'cwp_parked_domains'],
+              ['label' => "Addon Domains", 'name' => 'cwp_addon_domains'],
+          ];
+
+          // Initialize the order counter
+          $order = 0;
+
+          // Batch insert package options
+          foreach ($packageOptions as $optionData) {
+              $this->Record->insert("package_options", [
+                  'company_id' => 1,
+                  'label' => $optionData['label'],
+                  'name' => $optionData['name'],
+                  'type' => 'quantity',
+                  'addable' => 1,
+                  'editable' => 0,
+                  'hidden' => 0
+              ]);
+
+              // Get the ID of the inserted option
+              $optionId = $this->Record->lastInsertId();
+
+              // Insert package option values
+              $this->Record->insert("package_option_values", [
+                  'option_id' => $optionId,
+                  'status' => "active",
+                  'name' => "Number of " . $optionData['label'],
+                  'default' => 1,
+                  'min' => 1,
+                  'order' => $order++, // Increment order counter
+                  'max' => 10,
+                  'step' => 1
+              ]);
+
+              // Link package option to the option group
+              $this->Record->insert("package_option_group", [
+                  'option_id' => $optionId,
+                  'option_group_id' => $groupId,
+                  'order' => $order // Use incremented order value
+              ]);
+          }
+      }
+  }
+
+              //2.6.1
                 return true;
             }
         } catch (Exception $e) {
@@ -1297,16 +1606,35 @@ class Centoswebpanel extends Module
      */
     private function getFieldsFromInput(array $vars, $package)
     {
-        $fields = [
+        $fields['default'] = [
             'domain' => isset($vars['centoswebpanel_domain']) ? $vars['centoswebpanel_domain'] : null,
             'user' => isset($vars['centoswebpanel_username']) ? $vars['centoswebpanel_username'] : null,
             'pass' => isset($vars['centoswebpanel_password']) ? $vars['centoswebpanel_password'] : null,
             'email' => isset($vars['centoswebpanel_email']) ? $vars['centoswebpanel_email'] : null,
-            'package' => $package->meta->package,
             'inode' => $package->meta->inode,
             'limit_nofile' => $package->meta->nofile,
             'limit_nproc' => $package->meta->nproc,
         ];
+
+        if($package->meta->package == 'custom'){
+          $fields['custom'] = [
+            'package_name' => isset($vars['centoswebpanel_domain']) ? $vars['centoswebpanel_domain'] : null,
+            'disk_quota' => $vars['configoptions']['cwp_disk_space'] ? $vars['configoptions']['cwp_disk_space'] * 1024 : null,
+            'bandwidth' => $vars['configoptions']['cwp_bandwidth_usage'] ? $vars['configoptions']['cwp_bandwidth_usage'] * 1024 : null,
+            'ftp_accounts' => $vars['configoptions']['cwp_ftp_accounts'] ?? null,
+            'email_accounts' => $vars['configoptions']['cwp_email_accounts'] ?? null,
+            'email_lists' => $vars['configoptions']['cwp_email_lists'] ?? null,
+            'databases' => $vars['configoptions']['cwp_database'] ?? null,
+            'sub_domains' => $vars['configoptions']['cwp_sub_domains'] ?? null,
+            'parked_domains' => $vars['configoptions']['cwp_parked_domains'] ?? null,
+            'addons_domains' => $vars['configoptions']['cwp_addon_domains'] ?? null,
+            'hourly_emails' => $package->meta->maxhouremail ?? null,
+            ] ;
+            if($package->meta->resellerpack == "yes"){
+              $fields['custom']['reseller'] = "1";
+              $fields['custom']['accounts'] = $package->meta->reselleraccount ?? "1";
+            }
+        }
 
         return $fields;
     }
@@ -1475,5 +1803,111 @@ class Centoswebpanel extends Module
         ];
 
         return $rules;
+    }
+
+
+    //2.6.1
+    public function getClientTabs($package)
+    {
+        return [
+          'tabClientActions' => [
+            'name' => Language::_('Centoswebpanel.tab_client_actions', true),
+            'icon' =>  "fa fa-server"
+          ],
+        ];
+    }
+
+    public function tabClientActions($package, $service, array $post = null)
+    {
+        $module_row = $this->getModuleRow();
+        $this->view = new View('tab_client_actions', 'default');
+        $this->view->base_uri = $this->base_uri;
+        Loader::loadHelpers($this, ['Form', 'Html']);
+
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+        $api = $this->getApi($module_row->meta->host_name, $module_row->meta->port, $module_row->meta->api_key, $module_row->meta->use_ssl);
+        $domain = $service_fields->centoswebpanel_domain;
+        $domain_user = $service_fields->centoswebpanel_username;
+        $account_lists = $api->listAccounts();
+
+        $responseData = $account_lists->response();
+        if($responseData->status == "OK"){
+          foreach ($responseData->msj as $account) {
+              if($account->username == $domain_user){
+                $cwp_details['backup'] = ucfirst($account->backup);
+                $cwp_details['domain'] = $account->domain;
+                $cwp_details['email'] = $account->email;
+                $cwp_details['ip_address'] = $account->ip_address;
+                $cwp_details['username'] = $account->username;
+                $cwp_details['package_name'] = $account->package_name;
+                $cwp_details['reseller'] = ($account->reseller == "1") ?  Language::_('Centoswebpanel.client.reseller', true) : Language::_('Centoswebpanel.client.standard', true);
+                $cwp_details['setup_date'] = $account->setup_date;
+                $cwp_details['status'] = ucfirst($account->status);
+
+                $account_details = $api->accountDetail($account->username);
+                $account_details_response = $account_details->response();
+                $cwp_details['details'] =  $account_details_response->result;
+
+                $account_quota = $api->accountQuota($account->username);
+                $cwp_details['quota']  = $account_quota->response();
+
+                $modules = [
+                        'user' => ['session_key' => 'cwp_session'],
+                        'mysql_manager' => ['session_key' => 'mysql_session'],
+                        'domains' => ['session_key' => 'domain_session'],
+                        'crontab' => ['session_key' => 'crontab_session'],
+                        'phpini_editor' => ['session_key' => 'phpini_session'],
+                        'phpselector' => ['session_key' => 'phpselector_session'],
+                        'notification_center' => ['session_key' => 'notification_session'],
+                        'mod_security' => ['session_key' => 'modsec_session'],
+                        'statistics' => ['session_key' => 'statistics_session'],
+                        'ftp_accounts' => ['session_key' => 'ftp_session'],
+                        'backups' => ['session_key' => 'backups_session'],
+                        'protected_directory' => ['session_key' => 'pd_session'],
+                        'disk_usage' => ['session_key' => 'du_session'],
+                        'error_log' => ['session_key' => 'logs_session'],
+                        'fix_acc_perm' => ['session_key' => 'faperm_session'],
+                        'clam' => ['session_key' => 'clam_session'],
+                        'subdomains' => ['session_key' => 'subdomains_session'],
+                        'letsencrypt' => ['session_key' => 'ssl_session'],
+                        'redirect' => ['session_key' => 'redirect_session'],
+                        'email_accounts' => ['session_key' => 'eacc_session'],
+                        'forwarders_email' => ['session_key' => 'eforwarder_session'],
+                        'mail_autoreply' => ['session_key' => 'eautoreply_session'],
+                        'email_filters' => ['session_key' => 'efilters_session'],
+                        'mail_routing' => ['session_key' => 'erouting_session'],
+                        'email_importer' => ['session_key' => 'eimporter_session'],
+                        'dns_zone_editor' => ['session_key' => 'dns_session'],
+                        'addons' => ['session_key' => 'script_session'],
+                    ];
+                foreach ($modules as $key => $module) {
+                    $module_config = [
+                        'user' => $account->username,
+                        'timer' => 5,
+                        'module' => $key
+                    ];
+                    $session = $api->userSession($module_config);
+
+                    foreach ($session->response()->msj->details as $key => $sessionurl) {
+                        $cwp_details[$module['session_key']] = $sessionurl->url;
+                        break;
+                    }
+                }
+
+              }
+          }
+        }
+
+
+
+
+        $this->view->set('module_row', $module_row);
+        $this->view->set('package', $package);
+        $this->view->set('service', $service);
+        $this->view->set('service_fields', $service_fields);
+        $this->view->set('cwp_details', ($cwp_details ?? new stdClass()));
+        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'centoswebpanel' . DS);
+
+        return $this->view->fetch();
     }
 }

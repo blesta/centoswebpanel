@@ -163,7 +163,7 @@ class CentoswebpanelApi
      */
     public function updateAccount(array $params)
     {
-        // TODO This doesn't actually seem to work.  Figure out why and fix it
+        // TODO This doesn't actually seem to work.  Figure out why and fix it - This has been fixed in 2.6.1
         $params['action'] = 'udp';
         return $this->apiRequest('account', $params);
     }
@@ -295,4 +295,54 @@ class CentoswebpanelApi
 
         return $ip_address;
     }
+
+    //2.6.1
+    public function createPackage(array $params)
+    {
+        $params['action'] = 'add';
+        return $this->apiRequest('packages', $params);
+    }
+
+    public function updateCustomPackage(array $params){
+        $params['action'] = 'udp';
+        return $this->apiRequest('packages', $params);
+    }
+
+    public function deleteCustomPackage(array $params){
+        $params['action'] = 'del';
+        return $this->apiRequest('packages', $params);
+    }
+
+    public function userSession(array $params){
+      if($params['module'] == 'user'){
+        unset($params['module']);
+      }
+        $params['action'] = 'list';
+        return $this->apiRequest('user_session', $params);
+    }
+
+    public function listAccounts()
+    {
+        $params['action'] = 'list';
+        return $this->apiRequest('account', $params);
+    }
+
+    public function accountDetail($username)
+    {
+        $params = [
+            'user' => $username,
+            'action' => 'list'
+        ];
+        return $this->apiRequest('accountdetail', $params);
+    }
+
+    public function accountQuota($username)
+    {
+        $params = [
+            'user' => $username,
+            'action' => 'list'
+        ];
+        return $this->apiRequest('accountquota', $params);
+    }
+
 }

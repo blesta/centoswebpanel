@@ -28,7 +28,7 @@ class CentoswebpanelResponse
         if (!empty($this->headers)) {
             $headerOne = explode(' ', $this->headers[0]);
             if (count($headerOne) >= 2) {
-                $this->status = $headerOne[1];
+                $this->status = $headerOne[1]; 
             }
         }
     }
